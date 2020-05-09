@@ -195,6 +195,8 @@
 	},
 	"dependencies": {
 		"dateformat": "^3.0.3",
+		"docxtemplater": "^3.17.6",
+		"jszip": "^2.6.1",
 		"lint": "^0.7.0",
 		"lodash-id": "^0.14.0",
 		"lowdb": "^1.0.0",
