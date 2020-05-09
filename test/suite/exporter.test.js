@@ -38,4 +38,12 @@ suite.only('exporter tests', function () {
     const docxPath = path.join(outputPath, story_descriptor.title + '.docx');
     expect(fs.existsSync(docxPath)).to.be.equal(true);
   });
+
+  test('should create docx with custom file name', async function () {
+    const exporter = new Exporter(outputPath, story_descriptor);
+    await exporter.export(Template.MAFAGAFO_FAISCA);
+
+    const docxPath = path.join(outputPath, Template.MAFAGAFO_FAISCA.fileNameFormatter(story_descriptor));
+    expect(fs.existsSync(docxPath)).to.be.equal(true);
+  });
 });

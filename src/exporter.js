@@ -22,6 +22,23 @@ const Template = {
     fields: ['author', 'author_surname', 'title_keyword', 'address', 'city_postal', 'phone', 'email', 'title', 'word_count', 'content'],
     fileFormat: FileExtension.DOCX,
   },
+  MAFAGAFO_FAISCA: {
+    name: 'Mafagafo - Submissão Faísca',
+    url: 'https://mafagaforevista.com.br/submissoesfaisca/',
+    path: 'resources/templates/mafagafo-faisca.docx',
+    fields: ['author', 'email', 'title', 'word_count', 'content'],
+    fileNameFormatter (storyDescriptor) {
+      return `Submissão Faísca - ${storyDescriptor.title} - ${storyDescriptor.author}${this.fileFormat}`;
+    },
+    fileFormat: FileExtension.DOCX,
+  },
+  TRASGO: {
+    name: 'Trasgo',
+    url: 'https://trasgo.com.br/envie-o-seu-material',
+    path: 'resources/templates/trasgo.docx',
+    fields: ['author', 'email', 'title', 'word_count', 'content'],
+    fileFormat: FileExtension.DOCX,
+  },
 };
 
 class Exporter {
@@ -102,7 +119,16 @@ class Exporter {
         return this.fillTemplate(plainTemplate);
       })
       .then((zippedTemplate) => {
-        const outputFile = path.join(this.outputPath, this.storyDescriptor.title + template.fileFormat)
+        let filename = '';
+
+        // some magazines demand a certain format in the file name
+        if (typeof template.fileNameFormatter === 'function') {
+          filename = template.fileNameFormatter(this.storyDescriptor);
+        } else {
+          filename = this.storyDescriptor.title + template.fileFormat;
+        }
+
+        const outputFile = path.join(this.outputPath, filename)
         return writeFilePromise(outputFile, zippedTemplate);
       })
       .catch((e) => {
