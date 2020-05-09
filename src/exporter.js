@@ -142,7 +142,7 @@ class Exporter {
    * @param {Template} template to which template the story will be exported
    */
   export(template) {
-    this.validateDescriptor(template, false);
+    this.validateDescriptor(template, true);
 
     switch (template.fileFormat) {
       case FileExtension.DOCX:
