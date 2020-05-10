@@ -89,7 +89,8 @@ class Manager {
    * @return {Object} the version object just created
    */
   createNewVersion(storyId, versionName) {
-    const versionPath = path.join(this.workspaceDirectory, storyId, versionName + '.md');
+    const normalizedVersionName = utils.normalizeFilename(versionName);
+    const versionPath = path.join(this.workspaceDirectory, storyId, normalizedVersionName + '.md');
 
     if (fs.existsSync(versionPath)) {
       throw new Error(Errors.VERSION_ALREADY_EXISTS_ERROR);
@@ -136,7 +137,7 @@ class Manager {
 
     const storyId = parts[parts.length - 2];
     const versionFile = parts[parts.length - 1];
-    const versionName = versionFile.slice(0, versionFile.length - 3);
+    const fileVersionName = versionFile.slice(0, versionFile.length - 3);
 
     const storyObj = this.db.getStoryById(storyId);
     let versionObj = undefined;
@@ -152,7 +153,7 @@ class Manager {
     }
 
     storyVersions.forEach((v) => {
-      if (v.name === versionName) {
+      if (utils.normalizeFilename(v.name) === fileVersionName) {
         versionObj = v;
       }
     });
@@ -189,7 +190,7 @@ class Manager {
    * @param {Boolean} renameFiles if this  should rename the files as well.
    */
   editVersionName(versionObj, newName, renameFiles) {
-    const oldPath = this.getVersionPath(versionObj.storyId, versionObj.name);
+    const oldPath = this.getVersionPath(versionObj.storyId, utils.normalizeFilename(versionObj.name));
     const pathParts = utils.splitPathFile(oldPath);
     const newPath = path.join(pathParts[0], utils.normalizeFilename(newName) + '.md');
 
@@ -230,7 +231,7 @@ class Manager {
       }
     }
 
-    const versionPath = this.getVersionPath(storyId, versionObj.name);
+    const versionPath = this.getVersionPath(storyId, utils.normalizeFilename(versionObj.name));
 
     if (removeFiles) {
       fs.unlinkSync(versionPath);
@@ -290,7 +291,8 @@ class Manager {
   }
 
   getVersionPath(storyId, versionName) {
-    return path.join(this.workspaceDirectory, storyId, versionName + '.md');
+    const normalizedName = utils.normalizeFilename(versionName);
+    return path.join(this.workspaceDirectory, storyId, normalizedName + '.md');
   }
 }
 

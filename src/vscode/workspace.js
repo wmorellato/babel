@@ -197,15 +197,10 @@ class WorkspaceManager {
       return;
     }
 
-    const choice = await yesNoPromise({ title: 'Do you want to copy the contents from the draft?' });
     const storyObj = storyItem.story;
 
     try {
       const versionObj = this.manager.createNewVersion(storyObj.id, versionName);
-      // ---------------
-      if (choice === 'Yes') {
-        this.manager.copyContent(storyObj.id, 'draft', versionName);
-      }
 
       this.openVersionCommand(storyObj, versionObj);
       this.updateViews();
@@ -247,8 +242,7 @@ class WorkspaceManager {
     try {
       this.manager.editVersionName(versionNode.version, newName, true);
 
-      if (versionNode.version.id === this.focusedVersion.id) {
-        this.focusedVersion.name = newName;
+      if (versionNode.version.id === this.activeVersion) {
         await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
       }
 
@@ -490,17 +484,6 @@ class WorkspaceManager {
     }
 
     this.storyDataProvider.refresh();
-  }
-
-  /**
-   * Hide the VersionInfo view.
-   * @param {TextEditor} textEditor TextEditor instance
-   */
-  onDidCloseEditor() {
-    if (!vscode.window.activeTextEditor) {
-      vscode.commands.executeCommand('setContext', 'versionIsOpen', false);
-      this.focusedVersion = undefined;
-    }
   }
 }
 

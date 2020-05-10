@@ -52,7 +52,6 @@ async function activate(context) {
   vscode.workspace.onDidChangeTextDocument((documentChangedEvent) => workspace.onDidDocumentChange(documentChangedEvent));
   vscode.workspace.onDidCloseTextDocument((textDocument) => workspace.onDidCloseDocument(textDocument));
   vscode.workspace.onWillSaveTextDocument((willSaveEvent) => workspace.onWillSaveDocument(willSaveEvent));
-  vscode.workspace.onDidCloseTextDocument((textEditor) => workspace.onDidCloseEditor(textEditor));
 
   // commands
   context.subscriptions.push(vscode.commands.registerCommand('babel.newStory', () => workspace.newStoryCommand()));
