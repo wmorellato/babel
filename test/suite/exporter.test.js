@@ -35,11 +35,11 @@ suite('exporter tests', function () {
     const exporter = new Exporter(outputPath, story_descriptor);
     await exporter.export(Template.SHUNN_MANUSCRIPT);
 
-    const docxPath = path.join(outputPath, story_descriptor.title + '.docx');
+    const docxPath = path.join(outputPath, Template.SHUNN_MANUSCRIPT.fileNameFormatter(story_descriptor));
     expect(fs.existsSync(docxPath)).to.be.equal(true);
   });
 
-  test('should create docx with custom file name', async function () {
+  test('should create docx using Faisca format', async function () {
     const exporter = new Exporter(outputPath, story_descriptor);
     await exporter.export(Template.MAFAGAFO_FAISCA);
 

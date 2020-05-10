@@ -20,6 +20,9 @@ const Template = {
     url: 'https://www.shunn.net/format/templates.html',
     path: 'resources/templates/shunn.docx',
     fields: ['author', 'author_surname', 'title_keyword', 'address', 'city_postal', 'phone', 'email', 'title', 'word_count', 'content'],
+    fileNameFormatter (storyDescriptor) {
+      return `${storyDescriptor.title} (Shunn)${this.fileFormat}`;
+    },
     fileFormat: FileExtension.DOCX,
   },
   MAFAGAFO_FAISCA: {
@@ -37,6 +40,9 @@ const Template = {
     url: 'https://trasgo.com.br/envie-o-seu-material',
     path: 'resources/templates/trasgo.docx',
     fields: ['author', 'email', 'title', 'word_count', 'content'],
+    fileNameFormatter (storyDescriptor) {
+      return `${storyDescriptor.title} (Trasgo)${this.fileFormat}`;
+    },
     fileFormat: FileExtension.DOCX,
   },
 };
@@ -119,16 +125,9 @@ class Exporter {
         return this.fillTemplate(plainTemplate);
       })
       .then((zippedTemplate) => {
-        let filename = '';
-
-        // some magazines demand a certain format in the file name
-        if (typeof template.fileNameFormatter === 'function') {
-          filename = template.fileNameFormatter(this.storyDescriptor);
-        } else {
-          filename = this.storyDescriptor.title + template.fileFormat;
-        }
-
+        const filename = template.fileNameFormatter(this.storyDescriptor);
         const outputFile = path.join(this.outputPath, filename)
+        
         return writeFilePromise(outputFile, zippedTemplate);
       })
       .catch((e) => {
