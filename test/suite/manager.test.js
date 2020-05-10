@@ -92,7 +92,7 @@ suite('manager tests', function () {
 
   test('should remove version', function () {
     manager.removeVersion(storyId, versionObj, true);
-    const versionPath = manager.getVersionPath(storyId, versionObj);
+    const versionPath = manager.getVersionPath(storyId, versionObj.name);
 
     expect(fs.existsSync(versionPath)).to.be.equal(false);
   });
