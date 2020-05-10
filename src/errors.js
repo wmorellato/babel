@@ -9,4 +9,8 @@ module.exports = {
   VERSION_ALREADY_EXISTS_ERROR: 'VersionExistsError',
   VERSION_DB_UPDATE_ERROR: 'ErrorUpdatingVersion',
   STORY_DB_UPDATE_ERROR: 'ErrorUpdatingStory',
+  EXPORT_INVALID_TEMPLATE_ERROR: 'InvalidTemplateError',
+  EXPORT_MISSING_FIELD_ERROR: 'ExportMissingFieldError',
+  EXPORT_TEMPLATE_LOADING_ERROR: 'ExportTemplateLoadingError',
+  GENERIC_EXPORT_ERROR: 'ExportError',
 };

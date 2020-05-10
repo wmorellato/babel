@@ -57,6 +57,15 @@
 				"title": "Edit title"
 			},
 			{
+				"command": "babel.exportToTemplate",
+				"icon": {
+					"dark": "resources/dark/export.svg",
+					"light": "resources/light/export.svg"
+				},
+				"category": "Stories",
+				"title": "Export to template"
+			},
+			{
 				"command": "babel.editVersionName",
 				"icon": {
 					"dark": "resources/dark/edit.svg",
@@ -122,6 +131,12 @@
 			]
 		},
 		"menus": {
+			"editor/title": [
+				{
+					"command": "babel.exportToTemplate",
+					"group": "navigation"
+				}
+			],
 			"view/title": [
 				{
 					"command": "babel.newStory",
@@ -153,6 +168,11 @@
 					"when": "view == story-entries && viewItem == version-item"
 				},
 				{
+					"command": "babel.exportToTemplate",
+					"when": "view == story-entries && viewItem == version-item",
+					"group": "inline"
+				},
+				{
 					"command": "babel.editVersionName",
 					"when": "view == story-entries && viewItem == version-item",
 					"group": "inline"
@@ -166,6 +186,27 @@
 					"type": "boolean",
 					"description": "If set, the extension will also remove files when removing a story or a version from the workspace. Set with care.",
 					"default": false
+				},
+				"stories.authorInformation.name": {
+					"type": "string",
+					"description": "Your real name. If you want to use a pen name, set the option below and fill the \"Pen name\" field."
+				},
+				"stories.authorInformation.usePenName": {
+					"type": "boolean",
+					"description": "If set, Babel will use the value in the field \"Pen name\" when exporting stories.",
+					"default": false
+				},
+				"stories.authorInformation.penName": {
+					"type": "string",
+					"description": "Your pen name. If you want to use this when exporting stories, check the option below."
+				},
+				"stories.authorInformation.email": {
+					"type": "string",
+					"description": "Your e-mail. Not required, but a lot of templates demand this. Feel free to fill this information directly on the exported file later."
+				},
+				"stories.authorInformation.country": {
+					"type": "string",
+					"description": "The country where you live. Feel free to fill this information directly on the exported file later."
 				}
 			}
 		}
@@ -195,6 +236,8 @@
 	},
 	"dependencies": {
 		"dateformat": "^3.0.3",
+		"docxtemplater": "^3.17.6",
+		"jszip": "^2.6.1",
 		"lint": "^0.7.0",
 		"lodash-id": "^0.14.0",
 		"lowdb": "^1.0.0",

@@ -3,12 +3,31 @@ const path = require('path');
 const util = require('util');
 const vscode = require('vscode');
 const settings = require('../settings');
+const { Exporter, Template } = require('../exporter');
 const { Manager, Version } = require('../manager');
 const { StoryDataProvider, VersionInfoProvider } = require('./story-view-data-provider');
 const Errors = require('../errors');
 
 // word regex, compiling first
 const RE_WORD = new RegExp('\\w+', 'g');
+
+async function showAvailableTemplatesDialog() {
+  const quickPickItems = [];
+
+  Object.values(Template).forEach((template) => {
+    quickPickItems.push({
+      label: template.name,
+      object: template,
+    });
+  });
+
+  const quickPickOptions = {
+    ignoreFocusOut: true,
+    placeHolder: 'Choose the template you wish to export this story',
+  };
+
+  return await vscode.window.showQuickPick(quickPickItems, quickPickOptions);
+}
 
 /**
  * Custom yes/no quick pick to support title and item description. May
@@ -205,9 +224,10 @@ class WorkspaceManager {
   openVersionCommand(simpleStoryObj, versionObj) {
     const versionPath = this.manager.getVersionPath(simpleStoryObj.id, versionObj.name);
 
-    vscode.workspace.openTextDocument(versionPath).then((textDocument) => {
+    return vscode.workspace.openTextDocument(versionPath).then((textDocument) => {
       this.updateVersionInfoData(simpleStoryObj, versionObj);
-      vscode.window.showTextDocument(textDocument);
+      
+      return vscode.window.showTextDocument(textDocument);
     });
   }
 
@@ -242,6 +262,50 @@ class WorkspaceManager {
         vscode.window.showErrorMessage('Error renaming this version. Please, reopen the file and try again.');
       }
     }
+  }
+
+  /**
+   * 
+   * @param {VersionItem} versionNode 
+   */
+  async exportToTemplate(versionNode) {
+    // desnecessario
+    this.openVersionCommand(versionNode.simpleStoryObj, versionNode.version)
+      .then(async (textEditor) => {
+        if (!textEditor) {
+          return vscode.window.showErrorMessage('Could not export this version.');
+        }
+
+        const template = await showAvailableTemplatesDialog();
+
+        const outputFolder = await vscode.window.showOpenDialog({
+          canSelectFiles: false,
+          canSelectFolders: true,
+          canSelectMany: false,
+          openLabel: 'Select folder',
+        });
+    
+        if (!outputFolder || outputFolder.length === 0) {
+          return;
+        }
+
+        const authorInfo = settings.getAuthorInfo();
+        const storyDescriptor = {
+          title: versionNode.simpleStoryObj.title,
+          word_count: versionNode.version.wordCount,
+          content: textEditor.document.getText(),
+          ...authorInfo,
+        }
+
+        const exporter = new Exporter(outputFolder[0].fsPath, storyDescriptor);
+        exporter.export(template.object)
+          .then(() => {
+            vscode.window.showInformationMessage('Story succesfully exported. Good luck!');
+          })
+          .catch(() => {
+            vscode.window.showInformationMessage('Error exporting story.');
+          });
+      });
   }
 
   /**

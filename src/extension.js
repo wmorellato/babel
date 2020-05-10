@@ -52,13 +52,14 @@ async function activate(context) {
   vscode.workspace.onDidChangeTextDocument((documentChangedEvent) => workspace.onDidDocumentChange(documentChangedEvent));
   vscode.workspace.onDidCloseTextDocument((textDocument) => workspace.onDidCloseDocument(textDocument));
   vscode.workspace.onWillSaveTextDocument((willSaveEvent) => workspace.onWillSaveDocument(willSaveEvent));
-  // vscode.workspace.onDidCloseTextDocument((textEditor) => workspace.onDidCloseEditor(textEditor));
+  vscode.workspace.onDidCloseTextDocument((textEditor) => workspace.onDidCloseEditor(textEditor));
 
   // commands
   context.subscriptions.push(vscode.commands.registerCommand('babel.newStory', () => workspace.newStoryCommand()));
   context.subscriptions.push(vscode.commands.registerCommand('babel.newVersion', (node) => workspace.newVersionCommand(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.openVersion', (storyId, version) => workspace.openVersionCommand(storyId, version)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.editVersionName', (node) => workspace.editVersionNameCommand(node)));
+  context.subscriptions.push(vscode.commands.registerCommand('babel.exportToTemplate', (node) => workspace.exportToTemplate(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.editStoryTitle', (node) => workspace.editStoryTitle(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeVersion', (node) => workspace.removeVersion(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeStory', (node) => workspace.removeStory(node)));
