@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] - 2020-05-18
+
+### Fixed
+
+- Story icons did not show up in Linux as the file names as case sensitive.
+
 ## [1.1.0] - 2020-05-10
 
 ### Added
