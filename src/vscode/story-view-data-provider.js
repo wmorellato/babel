@@ -162,7 +162,7 @@ class StoryItem extends vscode.TreeItem {
     this.contextValue = 'story-item';
     this.collapsibleState = collapsibleState;
 
-    const iconName = this.story.title[0] + '.svg';
+    const iconName = this.story.title[0].toLowerCase() + '.svg';
     this.iconPath = {
       light: resources.getResourcePathByName('resources/light/' + iconName),
       dark: resources.getResourcePathByName('resources/dark/' + iconName),
