@@ -49,8 +49,6 @@ DocxSections[Template.MAFAGAFO_FAISCA] = {
       },
     });
     
-    // this is for an extra line between paragraphs
-    wordRuns.push(new TextRun({ text: os.EOL }));
     const paragraph = new Paragraph({
       children: wordRuns,
       style: 'Normal',
@@ -67,6 +65,48 @@ DocxSections[Template.MAFAGAFO_FAISCA] = {
     paragraph.properties.root.push(mockTextRun.properties);
     paragraph.root.push(paragraphAttributes);
   
+    return xml(Packer.compiler.formatter.format(paragraph), true);
+  }
+};
+
+DocxSections[Template.SHUNN_MANUSCRIPT] = {
+  newWordRun(text, italics) {
+    const runAttributes = new XmlAttributeComponent({
+      'w:rsidR': '00887836',
+    });
+  
+    const textRun = new TextRun({
+      text,
+      italics,
+    });
+  
+    textRun.root.push(runAttributes);
+  
+    return textRun;
+  },
+  
+  newParagraph(wordRuns) {
+    const paragraphAttributes = new XmlAttributeComponent({
+      'w:rsidR': '00887836',
+      'w:rsidP': '00887836',
+      'w:rsidRDefault': '006B37B5',
+      'w14:paraId': utils.getRandomParaId(),
+    });
+    
+    // <w:r>
+    //     <w:tab />
+    // </w:r>
+    const tr = new TextRun({});
+    tr.root.push({ 'w:tab': undefined });
+    wordRuns.unshift(tr);
+
+    const paragraph = new Paragraph({
+      children: wordRuns,
+      style: 'msText',
+    });
+  
+    paragraph.root.push(paragraphAttributes);
+
     return xml(Packer.compiler.formatter.format(paragraph), true);
   }
 };

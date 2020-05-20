@@ -5,6 +5,7 @@
 {
 	"version": "0.2.0",
 	"configurations": [
+
 		{
 			"name": "Run Extension",
 			"type": "extensionHost",
@@ -23,6 +24,12 @@
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/test/suite/index"
 			]
-		}
+		},
+		{
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Current Opened File",
+            "program": "${file}"
+        }
 	]
 }
