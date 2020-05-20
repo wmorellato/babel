@@ -111,6 +111,45 @@ DocxSections[Template.SHUNN_MANUSCRIPT] = {
   }
 };
 
+DocxSections[Template.TRASGO] = {
+  newWordRun(text, italics) {
+    const textRun = new TextRun({
+      font: {
+        name: 'Arial',
+      },
+      text,
+      italics,
+      size: 22,
+    });
+  
+    return textRun;
+  },
+  
+  newParagraph(wordRuns) {
+    const paragraphAttributes = new XmlAttributeComponent({
+      'w:rsidR': '00B748F9',
+      'w:rsidRDefault': '003B7B5B',
+      'w:rsidRPr': '003B7B5B',
+      'w14:paraId': utils.getRandomParaId(),
+    });
+    
+    const paragraph = new Paragraph({
+      children: wordRuns,
+      style: 'TextBody',
+      spacing: {
+        after: 0,
+      },
+      indent: {
+        firstLine: 720,
+      },
+    });
+  
+    paragraph.root.push(paragraphAttributes);
+  
+    return xml(Packer.compiler.formatter.format(paragraph), true);
+  }
+};
+
 /**
  * Creates a new word run based on the requested template.
  * @param {Template} templateId template id
