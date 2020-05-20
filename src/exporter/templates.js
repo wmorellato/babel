@@ -1,11 +1,17 @@
 const FileExtension = {
   DOCX: '.docx',
   PDF: '.pdf',
-}
+};
 
 const Template = {
-  SHUNN_MANUSCRIPT: {
-    id: 'shunn',
+  SHUNN_MANUSCRIPT: 'shunn',
+  MAFAGAFO_FAISCA: 'mafagafo-faisca',
+  TRASGO: 'trasgo',
+};
+
+const TemplateDescriptors = [
+  {
+    id: Template.SHUNN_MANUSCRIPT,
     name: 'Shunn Manuscript Format (Story Manuscript)',
     url: 'https://www.shunn.net/format/templates.html',
     path: 'resources/templates/shunn.docx',
@@ -15,8 +21,8 @@ const Template = {
       return `${storyDescriptor.title} (Shunn)${this.fileFormat}`;
     },
   },
-  MAFAGAFO_FAISCA: {
-    id: 'mafagafo-faisca',
+  {
+    id: Template.MAFAGAFO_FAISCA,
     name: 'Mafagafo - Submissão Faísca',
     url: 'https://mafagaforevista.com.br/submissoesfaisca/',
     path: 'resources/templates/mafagafo-faisca.docx',
@@ -26,8 +32,8 @@ const Template = {
       return `Submissão Faísca - ${storyDescriptor.title} - ${storyDescriptor.author}${this.fileFormat}`;
     },
   },
-  TRASGO: {
-    id: 'trasgo',
+  {
+    id: Template.TRASGO,
     name: 'Trasgo',
     url: 'https://trasgo.com.br/envie-o-seu-material',
     path: 'resources/templates/trasgo.docx',
@@ -39,8 +45,9 @@ const Template = {
       return `${storyDescriptor.title} (Trasgo)${this.fileFormat}`;
     },
   },
-};
+];
 
 module.exports = {
   Template,
+  TemplateDescriptors,
 };

@@ -1,14 +1,16 @@
+const os = require('os');
 const fs = require('fs');
+const eol = require('eol');
 const path = require('path');
 const util = require('util');
-const xml2js = require('xml2js');
 const JSZip = require('jszip');
-const mafagafoFaisca = require('./mafagafo-faisca');
+const Errors = require('../../errors');
+const sections = require('./docx-sections');
 // const resources = require('../vscode/resource-manager');
 
 const resources = {
   getResourcePathByName(relpath) {
-    const p = path.join(__dirname, '..', '..', '..', 'resources', 'templates', relpath);
+    const p = path.join(__dirname, '..', '..', '..', 'resources', relpath);
     return p;
   }
 }
@@ -21,13 +23,15 @@ const ITALICS_RE = new RegExp('\\*(.*?)\\*', 'g');
  * Open the document template and return an AdmZip object.
  * @param {String} templateId 
  */
-function getTemplateDocument(zip, templateId) {
-  const documentPath = path.join(templateId, 'template.docx');
+async function getTemplateDocument(zip, templateId) {
+  if (!zip || !templateId) {
+    throw new Error(Errors.EXPORT_INVALID_TEMPLATE_ERROR);
+  }
 
-  return readFilePromise(resources.getResourcePathByName(documentPath))
-    .then((buffer) => {
-      return zip.loadAsync(buffer);
-    })
+  const documentPath = path.join('templates', templateId + '.docx');
+
+  const buffer = await readFilePromise(resources.getResourcePathByName(documentPath));
+  return zip.loadAsync(buffer);
 }
 
 /**
@@ -39,7 +43,7 @@ function splitDocument(text) {
     return [];
   }
 
-  return text.split('\n\n');
+  return eol.auto(text).split(os.EOL + os.EOL);
 }
 
 /**
@@ -49,6 +53,10 @@ function splitDocument(text) {
  *    containing italics
  */
 function splitParagraph(paragraph) {
+  if (typeof paragraph !== 'string') {
+    return [];
+  }
+
   let match;
   let paragraphParts = [];
   let index = 0;
@@ -78,49 +86,14 @@ function createDocxParagraph(templateId, text) {
   for (const p of paragraphParts) {
     if (p.startsWith('*')) {
       const text = p.slice(1, p.length - 1);
-      textRuns.push(mafagafoFaisca.newWordRun(text, true));
+      textRuns.push(sections.newWordRun(templateId, text, true));
     } else {
-      textRuns.push(mafagafoFaisca.newWordRun(p, false));
+      textRuns.push(sections.newWordRun(templateId, p, false));
     }
   }
 
-  const paraXmlString = mafagafoFaisca.newParagraph(textRuns);
-  console.log(paraXmlString);
-  return xml2js.parseStringPromise(paraXmlString);
-}
-
-async function createDocxDocument(templateId, text) {
-  const paragraphs = splitDocument(text);
-  const xmlParagraphs = [];
-
-  // we need to preserve the order of the paragraphs, thus await
-  // maybe try other approaches later
-  const promises = paragraphs.map(async (p) => {
-    const xmlP = await createDocxParagraph(templateId, p);
-    xmlParagraphs.push(xmlP);
-  });
-
-  await Promise.all(promises);
-
-  let zip = new JSZip();
-
-  getTemplateDocument(zip, templateId)
-    .then((zipDoc) => {
-      return zipDoc.file('word/document.xml').async('string');
-    })
-    .then((documentFileText) => {
-      return xml2js.parseStringPromise(documentFileText);
-    })
-    .then((xmlDocumentFile) => {
-      const builder = new xml2js.Builder();
-
-      xmlParagraphs.forEach((xp) => {
-        xmlDocumentFile['w:document']['w:body'][0]['w:p'].push(xp['w:p']);
-      });
-
-      zip.file('word/document.xml', builder.buildObject(xmlDocumentFile));
-      writeDocxDocument(zip);
-    });
+  const paraXmlString = sections.newParagraph(templateId, textRuns);
+  return paraXmlString;
 }
 
 /**
@@ -136,7 +109,31 @@ function writeDocxDocument(zip) {
     });
 }
 
-createDocxDocument('mafagafo-faisca', 'This is *italics* inside a paragraph. *Another* italics. Have fun.');
+async function createDocxDocument(templateId, text) {
+  const paragraphs = splitDocument(text);
+  const xmlParagraphs = [];
+
+  // we need to preserve the order of the paragraphs, thus await
+  // maybe try other approaches later
+  paragraphs.forEach((p) => {
+    const xmlP = createDocxParagraph(templateId, p);
+    xmlParagraphs.push(xmlP);
+  });
+
+  let zip = new JSZip();
+
+  getTemplateDocument(zip, templateId)
+    .then((zipDoc) => {
+      return zipDoc.file('word/document.xml').async('string');
+    })
+    .then((documentFileText) => {
+      const combinedParas = xmlParagraphs.join(os.EOL + os.EOL);
+      zip.file('word/document.xml', documentFileText.replace('{content}', combinedParas));
+      writeDocxDocument(zip);
+    });
+}
+
+createDocxDocument('mafagafo-faisca', fs.readFileSync(path.join(__dirname, 'Original.md')).toString());
 // console.log(splitDocument('One paragrapht.\n\nTwo paragraphs.\n\n"Three."'));
 // console.log(splitParagraph('This is *italics* inside a paragraph. *Another* italics. Have fun.'));
 // console.log(splitParagraph('A paragraph with no italics.'));
