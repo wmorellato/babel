@@ -131,12 +131,6 @@
 			]
 		},
 		"menus": {
-			"editor/title": [
-				{
-					"command": "babel.exportToTemplate",
-					"group": "navigation"
-				}
-			],
 			"view/title": [
 				{
 					"command": "babel.newStory",

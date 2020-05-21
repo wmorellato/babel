@@ -6,14 +6,7 @@ const util = require('util');
 const JSZip = require('jszip');
 const Errors = require('../../errors');
 const sections = require('./docx-sections');
-// const resources = require('../vscode/resource-manager');
-
-const resources = {
-  getResourcePathByName(relpath) {
-    const p = path.join(__dirname, '..', '..', '..', 'resources', relpath);
-    return p;
-  }
-}
+const resources = require('../../vscode/resource-manager');
 
 const readFilePromise = util.promisify(fs.readFile);
 
@@ -28,9 +21,9 @@ async function getTemplateDocument(zip, templateId) {
     throw new Error(Errors.EXPORT_INVALID_TEMPLATE_ERROR);
   }
 
-  const documentPath = path.join('templates', templateId + '.docx');
+  const documentPath = path.join('resources', 'templates', templateId + '.docx');
 
-  const buffer = await readFilePromise(resources.getResourcePathByName(documentPath));
+  const buffer = await readFilePromise(resources.getResourcePathByName(documentPath).fsPath);
   return zip.loadAsync(buffer);
 }
 
@@ -124,7 +117,7 @@ function replaceFields(documentText, paragraphs, storyDescriptor) {
     .replace('{content}', paragraphs)
     .replace('{title}', storyDescriptor.title)
     .replace('{word_count}', storyDescriptor.word_count)
-    .replace('{author}', author)
+    .replace(/\{author\}/g, author)
     .replace('{email}', email)
     .replace('{country}', country);
 }
