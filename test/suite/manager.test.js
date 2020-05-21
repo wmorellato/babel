@@ -24,13 +24,6 @@ suite('manager tests', function () {
     rimraf(tempDir);
   });
 
-  test.skip('should initialize workspace', function () {
-    const workspaceDir = settings.getWorkspaceDir();
-    manager.createStoriesWorkspace();
-
-    expect(fs.existsSync(workspaceDir)).to.be.equal(true);
-  });
-
   test('should create new story', function () {
     storyId = manager.createNewStory().story.id;
 

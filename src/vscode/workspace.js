@@ -3,7 +3,7 @@ const path = require('path');
 const util = require('util');
 const vscode = require('vscode');
 const settings = require('../settings');
-const { Exporter, Template } = require('../exporter');
+const { Exporter } = require('../exporter');
 const { Manager, Version } = require('../manager');
 const { StoryDataProvider, VersionInfoProvider } = require('./story-view-data-provider');
 const Errors = require('../errors');
@@ -13,11 +13,12 @@ const RE_WORD = new RegExp('\\w+', 'g');
 
 async function showAvailableTemplatesDialog() {
   const quickPickItems = [];
+  const templates = Exporter.getAvailableTemplates();
 
-  Object.values(Template).forEach((template) => {
+  Object.keys(templates).forEach((id) => {
     quickPickItems.push({
-      label: template.name,
-      object: template,
+      id,
+      label: templates[id],
     });
   });
 
@@ -292,11 +293,12 @@ class WorkspaceManager {
         }
 
         const exporter = new Exporter(outputFolder[0].fsPath, storyDescriptor);
-        exporter.export(template.object)
+        exporter.export(template.id)
           .then(() => {
             vscode.window.showInformationMessage('Story succesfully exported. Good luck!');
           })
-          .catch(() => {
+          .catch((error) => {
+            console.error(error);
             vscode.window.showInformationMessage('Error exporting story.');
           });
       });

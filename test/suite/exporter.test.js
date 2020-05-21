@@ -2,7 +2,8 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const resources = require('../../src/vscode/resource-manager');
-const { Exporter, Template } = require('../../src/exporter');
+const { Exporter } = require('../../src/exporter');
+const { Template, getDescriptorById } = require('../../src/exporter/templates');
 const { expect } = require('chai');
 const Errors = require('../../src/errors');
 
@@ -27,23 +28,27 @@ suite('exporter tests', function () {
     });
   });
 
-  test.skip('should throw for missing field', function () {
-    expect(() => { new Exporter(outputPath, {}).export(Template.SHUNN_MANUSCRIPT) }).to.throw(Errors.EXPORT_MISSING_FIELD_ERROR);
-  });
+  test('should get all templates', function () {
+    const availableTemplates = Exporter.getAvailableTemplates();
 
-  test('should create output docx', async function () {
-    const exporter = new Exporter(outputPath, story_descriptor);
-    await exporter.export(Template.SHUNN_MANUSCRIPT);
-
-    const docxPath = path.join(outputPath, Template.SHUNN_MANUSCRIPT.fileNameFormatter(story_descriptor));
-    expect(fs.existsSync(docxPath)).to.be.equal(true);
+    expect(Object.keys(availableTemplates)).to.be.eql(Object.values(Template));
   });
 
   test('should create docx using Faisca format', async function () {
     const exporter = new Exporter(outputPath, story_descriptor);
     await exporter.export(Template.MAFAGAFO_FAISCA);
 
-    const docxPath = path.join(outputPath, Template.MAFAGAFO_FAISCA.fileNameFormatter(story_descriptor));
+    const docxPath = path.join(outputPath, getDescriptorById(Template.MAFAGAFO_FAISCA).fileNameFormatter(story_descriptor));
     expect(fs.existsSync(docxPath)).to.be.equal(true);
+  });
+
+  test('should fail to create docx', function (done) {
+    const exporter = new Exporter('a random output path', story_descriptor);
+
+    exporter.export(Template.SHUNN_MANUSCRIPT)
+      .catch((err) => {
+        expect(err.code).to.be.equal('ENOENT');
+        done();
+      });
   });
 });
