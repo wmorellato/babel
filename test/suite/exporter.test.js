@@ -2,7 +2,8 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const resources = require('../../src/vscode/resource-manager');
-const { Exporter, Template } = require('../../src/exporter');
+const { Exporter } = require('../../src/exporter');
+const { Template } = require('../../src/exporter/templates');
 const { expect } = require('chai');
 const Errors = require('../../src/errors');
 
@@ -31,15 +32,13 @@ suite('exporter tests', function () {
     expect(() => { new Exporter(outputPath, {}).export(Template.SHUNN_MANUSCRIPT) }).to.throw(Errors.EXPORT_MISSING_FIELD_ERROR);
   });
 
-  test('should create output docx', async function () {
-    const exporter = new Exporter(outputPath, story_descriptor);
-    await exporter.export(Template.SHUNN_MANUSCRIPT);
+  test('should get all templates', function () {
+    const availableTemplates = Exporter.getAvailableTemplates();
 
-    const docxPath = path.join(outputPath, Template.SHUNN_MANUSCRIPT.fileNameFormatter(story_descriptor));
-    expect(fs.existsSync(docxPath)).to.be.equal(true);
+    expect(Object.keys(availableTemplates)).to.be.eql(Object.values(Template));
   });
 
-  test('should create docx using Faisca format', async function () {
+  test.only('should create docx using Faisca format', async function () {
     const exporter = new Exporter(outputPath, story_descriptor);
     await exporter.export(Template.MAFAGAFO_FAISCA);
 

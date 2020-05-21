@@ -3,11 +3,15 @@ const FileExtension = {
   PDF: '.pdf',
 };
 
+Object.freeze(FileExtension);
+
 const Template = {
   SHUNN_MANUSCRIPT: 'shunn',
   MAFAGAFO_FAISCA: 'mafagafo-faisca',
   TRASGO: 'trasgo',
 };
+
+Object.freeze(Template);
 
 const TemplateDescriptors = [
   {
@@ -47,7 +51,15 @@ const TemplateDescriptors = [
   },
 ];
 
+function getDescriptorById(templateId) {
+  const descriptors = TemplateDescriptors.filter((td) => td.id === templateId);
+
+  return descriptors[0];
+}
+
 module.exports = {
   Template,
   TemplateDescriptors,
+  FileExtension,
+  getDescriptorById,
 };

@@ -97,43 +97,85 @@ function createDocxParagraph(templateId, text) {
 }
 
 /**
- * 
- * @param {JSZip} zip 
+ * Replace all fields in the template document
+ * @param {String} documentText template document text read above
+ * @param {Paragraph[]} paragraphs docx.Paragraph array
+ * @param {Object} storyDescriptor object describing the story passed by
+ *    the workspace
  */
-function writeDocxDocument(zip) {
-  zip
-    .generateNodeStream({ type: 'nodebuffer', 'compression': 'DEFLATE' })
-    .pipe(fs.createWriteStream(path.join(__dirname, 'new_shunn.docx')))
-    .on('finish', () => {
-      console.log('docx written');
-    });
+function replaceFields(documentText, paragraphs, storyDescriptor) {
+  let author = 'Author';
+  let email = 'E-mail';
+  let country = 'Country';
+
+  if (storyDescriptor.author) {
+    author = storyDescriptor.author;
+  }
+
+  if (storyDescriptor.email) {
+    email = storyDescriptor.email;
+  }
+
+  if (storyDescriptor.country) {
+    country = storyDescriptor.country;
+  }
+
+  return documentText
+    .replace('{content}', paragraphs)
+    .replace('{title}', storyDescriptor.title)
+    .replace('{word_count}', storyDescriptor.word_count)
+    .replace('{author}', author)
+    .replace('{email}', email)
+    .replace('{country}', country);
 }
 
-async function createDocxDocument(templateId, text) {
-  const paragraphs = splitDocument(text);
+/**
+ * Create a docx document from a story based on the requested template.
+ * @param {Template} templateDescriptor one of the Template enum items
+ * @param {Object} storyDescriptor object containing all necessary information
+ *    to export a story
+ */
+async function createDocxDocument(templateDescriptor, storyDescriptor) {
+  const paragraphs = splitDocument(storyDescriptor.content);
   const xmlParagraphs = [];
 
   // we need to preserve the order of the paragraphs, thus await
   // maybe try other approaches later
   paragraphs.forEach((p) => {
-    const xmlP = createDocxParagraph(templateId, p);
+    const xmlP = createDocxParagraph(templateDescriptor.id, p);
     xmlParagraphs.push(xmlP);
   });
 
   let zip = new JSZip();
 
-  getTemplateDocument(zip, templateId)
+  getTemplateDocument(zip, templateDescriptor.id)
     .then((zipDoc) => {
       return zipDoc.file('word/document.xml').async('string');
     })
     .then((documentFileText) => {
       const combinedParas = xmlParagraphs.join(os.EOL + os.EOL);
-      zip.file('word/document.xml', documentFileText.replace('{content}', combinedParas));
-      writeDocxDocument(zip);
+
+      zip.file('word/document.xml', replaceFields(documentFileText, combinedParas, storyDescriptor));
+
+      writeDocxDocument(zip, templateDescriptor, storyDescriptor);
     });
 }
 
-createDocxDocument('mafagafo-faisca', fs.readFileSync(path.join(__dirname, 'Original.md')).toString());
-// console.log(splitDocument('One paragrapht.\n\nTwo paragraphs.\n\n"Three."'));
-// console.log(splitParagraph('This is *italics* inside a paragraph. *Another* italics. Have fun.'));
-// console.log(splitParagraph('A paragraph with no italics.'));
+/**
+ * 
+ * @param {JSZip} zip 
+ */
+function writeDocxDocument(zip, templateDescriptor, storyDescriptor) {
+  const filename = templateDescriptor.fileNameFormatter(storyDescriptor);
+
+  zip
+    .generateNodeStream({ type: 'nodebuffer', 'compression': 'DEFLATE' })
+    .pipe(fs.createWriteStream(path.join(__dirname, filename)))
+    .on('finish', () => {
+      console.log('docx written');
+    });
+}
+
+module.exports = {
+  createDocxDocument,
+};
