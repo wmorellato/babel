@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.0] - 2020-05-21
+
+### Changed
+
+- Changed the exporter implementation to one that supports italics and other features.
+- Changed `.travis.yml` build trigger.
+
+### Fixed
+
+- Exporter button showing up on editor for every file.
+
 ## [1.1.1] - 2020-05-18
 
 ### Fixed

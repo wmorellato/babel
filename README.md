@@ -15,21 +15,41 @@ Babel is a Visual Studio Code extension for writers and developers. It helps you
 
 ## Exporting
 
-> :warning: **This feature is experimental!** Please, review the output .docx file and fix any badly formatted paragraphs.
+> Please, review the output .docx file to fix any badly formatted text and to insert missing information about yourself.
 
-It is possible to export a version to some of the provided templates. This feature is still in experimental stage and there are known issues:
+You can easily export your versions to one of the provided formats. To do so, search for the export button next to each version name (you need to hover your mouse over the version row in the Story Explorer).
 
-- Paragraphs are not indented.
-- No support for *italics*
-- I had some issues with Google Docs not recognizing line breaks.
+The author's information from Babel's settings will be used to fill some of the fields in the output document.
 
-I am currently working on my own implementation of exporting to .docx to fix the issues above, but this might take some time. Try it and see if it works for you.
+### Italics
+
+To include *italics* in the output document, use the default markdown syntax (\*italics*\).
+
+### Paragraphs
+
+To be able to correctly export the paragraphs, you need to separate paragraphs with a blank line. **This includes dialog lines**. Here's how an excerpt of *Lord of the Rings* should be formatted:
+
+```
+It was dark, and white stars were shining, when Frodo and his companions came at last to the Greenway-crossing and drew near the village. They came to the West-gate and found it shut, but at the door of the lodge beyond it, there was a man sitting. He jumped up and fetched a lantern and looked over the gate at them in surprise.
+
+"What do you want, and where do you come from?' he asked gruffly"
+
+"We are making for the inn here,' answered Frodo. 'We are journeying east and cannot go further tonight."
+```
+
+### Templates
 
 Babel is able to export to the following formats:
 
 - [Shunn's Manuscript Format](https://www.shunn.net/format/templates.html)
 - [Revista Mafagafo Faísca Template](https://mafagaforevista.com.br/submissoesfaisca/)
 - [Revista Trasgo Template](https://trasgo.com.br/envie-o-seu-material)
+
+The output docx files for *The Library of Babel*, from Jorge Luis Borges, can be seen below.
+
+Shuun                        | Mafagafo Faísca              | Trasgo
+:---------------------------:|:----------------------------:|:----------------------------:
+![](images/shunn-export.png) |![](images/faisca-export.png) |![](images/trasgo-export.png) 
 
 ## Settings
 
@@ -44,6 +64,6 @@ Babel is able to export to the following formats:
 
 - Integration with OneDrive, Google Drive and Dropbox to backup stories.
 - Linguistic analysis of texts.
-- Export to rtf, docx and pdf formats in common submission templates.
 - Integration with *zen mode* in VSCode.
 - Integration with [The Grinder](https://thegrinder.diabolicalplots.com/).
+- Improve the exporter feature to supporte .rtf format.
