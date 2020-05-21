@@ -35,7 +35,7 @@ class Exporter {
 
     switch (descriptor.fileFormat) {
       case FileExtension.DOCX:
-        return docxBuilder.createDocxDocument(descriptor, this.storyDescriptor);
+        return docxBuilder.createDocxDocument(descriptor, this.storyDescriptor, this.outputPath);
     }    
   }
 }

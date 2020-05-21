@@ -134,8 +134,9 @@ function replaceFields(documentText, paragraphs, storyDescriptor) {
  * @param {Template} templateDescriptor one of the Template enum items
  * @param {Object} storyDescriptor object containing all necessary information
  *    to export a story
+ * @param {String} outputPath the output directory for the document
  */
-async function createDocxDocument(templateDescriptor, storyDescriptor) {
+function createDocxDocument(templateDescriptor, storyDescriptor, outputPath) {
   const paragraphs = splitDocument(storyDescriptor.content);
   const xmlParagraphs = [];
 
@@ -148,7 +149,7 @@ async function createDocxDocument(templateDescriptor, storyDescriptor) {
 
   let zip = new JSZip();
 
-  getTemplateDocument(zip, templateDescriptor.id)
+  return getTemplateDocument(zip, templateDescriptor.id)
     .then((zipDoc) => {
       return zipDoc.file('word/document.xml').async('string');
     })
@@ -157,23 +158,28 @@ async function createDocxDocument(templateDescriptor, storyDescriptor) {
 
       zip.file('word/document.xml', replaceFields(documentFileText, combinedParas, storyDescriptor));
 
-      writeDocxDocument(zip, templateDescriptor, storyDescriptor);
+      return writeDocxDocument(zip, templateDescriptor, storyDescriptor, outputPath);
     });
 }
 
 /**
- * 
- * @param {JSZip} zip 
+ * Write the modified docx to the output path.
+ * @param {JSZip} zip JSZip object
+ * @param {Template} templateDescriptor full template descriptor
+ * @param {Object} storyDescriptor story descriptor
+ * @param {String} outputPath the output directory for the document
  */
-function writeDocxDocument(zip, templateDescriptor, storyDescriptor) {
-  const filename = templateDescriptor.fileNameFormatter(storyDescriptor);
+function writeDocxDocument(zip, templateDescriptor, storyDescriptor, outputPath) {
+  return new Promise((resolve, reject) => {
+    const filename = templateDescriptor.fileNameFormatter(storyDescriptor);
+    const fullOutputPath = path.join(outputPath, filename);
 
-  zip
-    .generateNodeStream({ type: 'nodebuffer', 'compression': 'DEFLATE' })
-    .pipe(fs.createWriteStream(path.join(__dirname, filename)))
-    .on('finish', () => {
-      console.log('docx written');
-    });
+    zip
+      .generateNodeStream({ type: 'nodebuffer', 'compression': 'DEFLATE' })
+      .pipe(fs.createWriteStream(fullOutputPath))
+      .on('finish', () => resolve())
+      .on('error', (error) => { reject(error); });
+  });
 }
 
 module.exports = {

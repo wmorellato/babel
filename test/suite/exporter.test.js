@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const resources = require('../../src/vscode/resource-manager');
 const { Exporter } = require('../../src/exporter');
-const { Template } = require('../../src/exporter/templates');
+const { Template, getDescriptorById } = require('../../src/exporter/templates');
 const { expect } = require('chai');
 const Errors = require('../../src/errors');
 
@@ -28,21 +28,27 @@ suite('exporter tests', function () {
     });
   });
 
-  test.skip('should throw for missing field', function () {
-    expect(() => { new Exporter(outputPath, {}).export(Template.SHUNN_MANUSCRIPT) }).to.throw(Errors.EXPORT_MISSING_FIELD_ERROR);
-  });
-
   test('should get all templates', function () {
     const availableTemplates = Exporter.getAvailableTemplates();
 
     expect(Object.keys(availableTemplates)).to.be.eql(Object.values(Template));
   });
 
-  test.only('should create docx using Faisca format', async function () {
+  test('should create docx using Faisca format', async function () {
     const exporter = new Exporter(outputPath, story_descriptor);
     await exporter.export(Template.MAFAGAFO_FAISCA);
 
-    const docxPath = path.join(outputPath, Template.MAFAGAFO_FAISCA.fileNameFormatter(story_descriptor));
+    const docxPath = path.join(outputPath, getDescriptorById(Template.MAFAGAFO_FAISCA).fileNameFormatter(story_descriptor));
     expect(fs.existsSync(docxPath)).to.be.equal(true);
+  });
+
+  test('should fail to create docx', function (done) {
+    const exporter = new Exporter('a random output path', story_descriptor);
+
+    exporter.export(Template.SHUNN_MANUSCRIPT)
+      .catch((err) => {
+        expect(err.code).to.be.equal('ENOENT');
+        done();
+      });
   });
 });

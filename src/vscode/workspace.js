@@ -297,7 +297,8 @@ class WorkspaceManager {
           .then(() => {
             vscode.window.showInformationMessage('Story succesfully exported. Good luck!');
           })
-          .catch(() => {
+          .catch((error) => {
+            console.error(error);
             vscode.window.showInformationMessage('Error exporting story.');
           });
       });
