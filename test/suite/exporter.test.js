@@ -51,4 +51,12 @@ suite('exporter tests', function () {
         done();
       });
   });
+
+  test.only('should get metadata from template', function () {
+    let metadataText = Exporter.getMetadataFromTemplate(Template.SHUNN_MANUSCRIPT);
+    expect(metadataText).to.be.equal('---\nauthor: ""\nauthor_surname: ""\ntitle_keyword: ""\naddress: ""\ncity_postal: ""\nphone: ""\nemail: ""\ntitle: ""\nword_count: ""\ncontent: ""\n---\n\n');
+
+    metadataText = Exporter.getMetadataFromTemplate(Template.MAFAGAFO_FAISCA);
+    expect(metadataText).to.be.equal('---\nauthor: ""\nemail: ""\ntitle: ""\nword_count: ""\ncontent: ""\n---\n\n');
+  });
 });

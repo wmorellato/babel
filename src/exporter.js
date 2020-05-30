@@ -1,4 +1,5 @@
 const docxBuilder = require('./exporter/docx/builder');
+const Errors = require('./errors');
 const { TemplateDescriptors, FileExtension, getDescriptorById } = require('./exporter/templates');
 
 class Exporter {
@@ -23,6 +24,30 @@ class Exporter {
     });
 
     return templates;
+  }
+
+  /**
+   * Create a Markdown metadata header to be placed on top of files.
+   * @param {Template} templateId the template which fields will be used to
+   *    create the metadata text
+   * @throws EXPORT_INVALID_TEMPLATE_ERROR if the the templateId is invalid
+   * @return the markdown metadata text with empty fields
+   */
+  static getMetadataFromTemplate(templateId) {
+    let metadataText;
+    const templateDescriptor = getDescriptorById(templateId);
+
+    if (!templateDescriptor) {
+      throw new Error(Errors.EXPORT_INVALID_TEMPLATE_ERROR);
+    }
+
+    metadataText = '---\n';
+    templateDescriptor.fields.forEach((f) => {
+      metadataText += `${f}: ""\n`;
+    });
+    metadataText += '---\n\n';
+
+    return metadataText;
   }
 
   /**
