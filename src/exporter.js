@@ -45,6 +45,10 @@ class Exporter {
       throw new Error(Errors.EXPORT_INVALID_TEMPLATE_ERROR);
     }
 
+    if (!defaultValues) {
+      defaultValues = {};
+    }
+
     metadataText = '---\n';
     metadataText += `title: "${defaultValues['title'] || ''}"\n`;
     templateDescriptor.fields.forEach((f) => {

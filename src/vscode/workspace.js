@@ -487,6 +487,32 @@ class WorkspaceManager {
 
     this.storyDataProvider.refresh();
   }
+
+  /**
+   * Presents the user to the list of available templates and
+   * insert a header on the top of the file with the fields
+   * present in that template.
+   */
+  async insertMetadata() {
+    const textEditor = vscode.window.activeTextEditor;
+
+    if (!textEditor || !this.manager.isStory(textEditor.document.fileName)) {
+      return true;
+    }
+
+    const template = await showAvailableTemplatesDialog();
+    const defaultValues = { title: this.visibleVersions[this.activeVersion].story.title, ...settings.getAuthorInfo() };
+
+    const metadataText = Exporter.getMetadataFromTemplate(template.id, defaultValues);
+    console.log(metadataText);
+    textEditor.edit((editBuilder) => {
+      editBuilder.insert(new vscode.Position(0, 0), metadataText);
+    });
+  }
+
+  getStoryData() {
+
+  }
 }
 
 module.exports = {

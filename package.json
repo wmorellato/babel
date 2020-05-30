@@ -26,7 +26,7 @@
 		"onView:story-entries",
 		"workspaceContains:babel.json"
 	],
-	"main": "dist/babel.js",
+	"main": "src/extension.js",
 	"contributes": {
 		"commands": [
 			{
