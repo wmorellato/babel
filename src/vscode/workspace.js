@@ -11,7 +11,7 @@ const Errors = require('../errors');
 // word regex, compiling first
 const RE_WORD = new RegExp('\\w+', 'g');
 
-async function showAvailableTemplatesDialog() {
+async function showAvailableTemplatesDialog(message) {
   const quickPickItems = [];
   const templates = Exporter.getAvailableTemplates();
 
@@ -24,7 +24,7 @@ async function showAvailableTemplatesDialog() {
 
   const quickPickOptions = {
     ignoreFocusOut: true,
-    placeHolder: 'Choose the template you wish to export this story',
+    placeHolder: message || 'Choose the template you wish to export this story',
   };
 
   return await vscode.window.showQuickPick(quickPickItems, quickPickOptions);
@@ -500,7 +500,7 @@ class WorkspaceManager {
       return true;
     }
 
-    const template = await showAvailableTemplatesDialog();
+    const template = await showAvailableTemplatesDialog('Select the template');
     const defaultValues = { title: this.visibleVersions[this.activeVersion].story.title, ...settings.getAuthorInfo() };
 
     const metadataText = Exporter.getMetadataFromTemplate(template.id, defaultValues);

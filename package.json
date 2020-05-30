@@ -100,6 +100,11 @@
 				},
 				"category": "Explorer",
 				"title": "Refresh"
+			},
+			{
+				"command": "babel.insertMetadata",
+				"category": "Explorer",
+				"title": "Insert header"
 			}
 		],
 		"viewsContainers": {
@@ -170,6 +175,12 @@
 					"command": "babel.editVersionName",
 					"when": "view == story-entries && viewItem == version-item",
 					"group": "inline"
+				}
+			],
+			"editor/context": [
+				{
+					"command": "babel.insertMetadata",
+					"when": "versionIsOpen"
 				}
 			]
 		},
