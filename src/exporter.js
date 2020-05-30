@@ -30,11 +30,15 @@ class Exporter {
    * Create a Markdown metadata header to be placed on top of files.
    * @param {Template} templateId the template which fields will be used to
    *    create the metadata text
+   * @param {Object} defaultValues default values to be used when generating
+   *    the header. Mostly these values will be read from Settings.
    * @throws EXPORT_INVALID_TEMPLATE_ERROR if the the templateId is invalid
    * @return the markdown metadata text with empty fields
    */
-  static getMetadataFromTemplate(templateId) {
+  static getMetadataFromTemplate(templateId, defaultValues) {
     let metadataText;
+    // title will be placed first
+    const excludeFields = ['title', 'word_count', 'content'];
     const templateDescriptor = getDescriptorById(templateId);
 
     if (!templateDescriptor) {
@@ -42,9 +46,15 @@ class Exporter {
     }
 
     metadataText = '---\n';
+    metadataText += `title: "${defaultValues['title'] || ''}"\n`;
     templateDescriptor.fields.forEach((f) => {
-      metadataText += `${f}: ""\n`;
+      if (excludeFields.includes(f)) {
+        return;
+      }
+
+      metadataText += `${f}: "${defaultValues[f] || ''}"\n`;
     });
+    metadataText += `country: "${defaultValues['country'] || ''}"\n`;
     metadataText += '---\n\n';
 
     return metadataText;

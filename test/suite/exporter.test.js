@@ -53,10 +53,10 @@ suite('exporter tests', function () {
   });
 
   test.only('should get metadata from template', function () {
-    let metadataText = Exporter.getMetadataFromTemplate(Template.SHUNN_MANUSCRIPT);
-    expect(metadataText).to.be.equal('---\nauthor: ""\nauthor_surname: ""\ntitle_keyword: ""\naddress: ""\ncity_postal: ""\nphone: ""\nemail: ""\ntitle: ""\nword_count: ""\ncontent: ""\n---\n\n');
+    let metadataText = Exporter.getMetadataFromTemplate(Template.SHUNN_MANUSCRIPT, { title: 'Viagem', author: 'Cecilia Meireles', email: 'cecilia.meireles@abl.org', country: 'Brasil' });
+    expect(metadataText).to.be.equal('---\ntitle: "Viagem"\nauthor: "Cecilia Meireles"\nauthor_surname: ""\ntitle_keyword: ""\naddress: ""\ncity_postal: ""\nphone: ""\nemail: "cecilia.meireles@abl.org"\ncountry: "Brasil"\n---\n\n');
 
-    metadataText = Exporter.getMetadataFromTemplate(Template.MAFAGAFO_FAISCA);
-    expect(metadataText).to.be.equal('---\nauthor: ""\nemail: ""\ntitle: ""\nword_count: ""\ncontent: ""\n---\n\n');
+    metadataText = Exporter.getMetadataFromTemplate(Template.MAFAGAFO_FAISCA, { title: 'Viagem', author: 'Cecilia Meireles', email: 'cecilia.meireles@abl.org', country: 'Brasil' });
+    expect(metadataText).to.be.equal('---\ntitle: "Viagem"\nauthor: "Cecilia Meireles"\nemail: "cecilia.meireles@abl.org"\ncountry: "Brasil"\n---\n\n');
   });
 });
