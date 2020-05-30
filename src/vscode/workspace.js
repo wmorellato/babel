@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 const vscode = require('vscode');
+const parseMD = require('parse-md').default;
 const settings = require('../settings');
 const { Exporter } = require('../exporter');
 const { Manager, Version } = require('../manager');
@@ -284,13 +285,7 @@ class WorkspaceManager {
           return;
         }
 
-        const authorInfo = settings.getAuthorInfo();
-        const storyDescriptor = {
-          title: versionNode.simpleStoryObj.title,
-          word_count: versionNode.version.wordCount,
-          content: textEditor.document.getText(),
-          ...authorInfo,
-        }
+        const storyDescriptor = this.getStoryData(textEditor, versionNode);
 
         const exporter = new Exporter(outputFolder[0].fsPath, storyDescriptor);
         exporter.export(template.id)
@@ -366,12 +361,29 @@ class WorkspaceManager {
   }
 
   /**
-   * Count the number of words in the give document.
+   * Count the number of words in the given document.
    * @param {vscode.TextDocument} textDocument TextDocument instance
    * @return the number of words in the document
    */
   getDocumentWordCount(textDocument) {
     const match = textDocument.getText().match(RE_WORD);
+
+    if (!match) {
+      return 0;
+    } else {
+      return match.length;
+    }
+  }
+
+  /**
+   * Count the number of words in the given text. This function
+   * will be used to count the words before exporting to avoid
+   * couting the words inside the header.
+   * @param {String} text any text
+   * @return the number of words in the document
+   */
+  getTextWordCount(text) {
+    const match = text.match(RE_WORD);
 
     if (!match) {
       return 0;
@@ -510,8 +522,30 @@ class WorkspaceManager {
     });
   }
 
-  getStoryData() {
+  /**
+   * Get story metadata. Tries to first get data from a header on the top
+   * of the file, then from the Settings.
+   * @param {vscode.TextEditor} textEditor the TextEditor holding the document
+   *    to be exported
+   * @param {Object} versionNode version TreeItem node
+   */
+  getStoryData(textEditor, versionNode) {
+    try {
+      const { metadata, content } = parseMD(textEditor.document.getText());
 
+      const authorInfo = Object.keys(metadata).length > 0 ? metadata : settings.getAuthorInfo();
+      const title = metadata.title ? metadata.title : versionNode.simpleStoryObj.title;
+      delete authorInfo.title;
+      
+      return {
+        title,
+        content,
+        word_count: this.getTextWordCount(content),
+        ...authorInfo,
+      }
+    } catch (e) {
+      vscode.window.showErrorMessage('There was an error trying to read the header contents.');
+    }
   }
 }
 
