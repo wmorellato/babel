@@ -60,6 +60,12 @@ Shuun                        | Mafagafo Faísca              | Trasgo
 - `stories.authorInformation.email`: author's e-mail.
 - `stories.authorInformation.country`: author's country.
 
+### Markdown metadata
+
+You can insert Markdown metadata as a header on the top of each version file to use its values instead of the provided in settings. If a field used by the template is missing or its value is empty, then we try to get the value from settings.
+
+To insert the header in a version file, right-click on the editor and click the option `Insert header`. You will be provided with a list of the available templates. The header will be generated based on the fields required by this template.
+
 ## Upcoming features
 
 - Integration with OneDrive, Google Drive and Dropbox to backup stories.

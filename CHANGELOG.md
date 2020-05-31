@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.0] - 2020-05-31
+
+### Added
+
+- Command to include Markdown metadata on the top of the file based on the selected template.
+
+### Changed
+
+- The replacement of keywords in the document now uses the information provided from the header.
+
 ## [1.2.0] - 2020-05-21
 
 ### Changed
