@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 const vscode = require('vscode');
+const parseMD = require('parse-md').default;
 const settings = require('../settings');
 const { Exporter } = require('../exporter');
 const { Manager, Version } = require('../manager');
@@ -11,7 +12,7 @@ const Errors = require('../errors');
 // word regex, compiling first
 const RE_WORD = new RegExp('\\w+', 'g');
 
-async function showAvailableTemplatesDialog() {
+async function showAvailableTemplatesDialog(message) {
   const quickPickItems = [];
   const templates = Exporter.getAvailableTemplates();
 
@@ -24,7 +25,7 @@ async function showAvailableTemplatesDialog() {
 
   const quickPickOptions = {
     ignoreFocusOut: true,
-    placeHolder: 'Choose the template you wish to export this story',
+    placeHolder: message || 'Choose the template you wish to export this story',
   };
 
   return await vscode.window.showQuickPick(quickPickItems, quickPickOptions);
@@ -284,13 +285,7 @@ class WorkspaceManager {
           return;
         }
 
-        const authorInfo = settings.getAuthorInfo();
-        const storyDescriptor = {
-          title: versionNode.simpleStoryObj.title,
-          word_count: versionNode.version.wordCount,
-          content: textEditor.document.getText(),
-          ...authorInfo,
-        }
+        const storyDescriptor = this.getStoryData(textEditor, versionNode);
 
         const exporter = new Exporter(outputFolder[0].fsPath, storyDescriptor);
         exporter.export(template.id)
@@ -366,12 +361,29 @@ class WorkspaceManager {
   }
 
   /**
-   * Count the number of words in the give document.
+   * Count the number of words in the given document.
    * @param {vscode.TextDocument} textDocument TextDocument instance
    * @return the number of words in the document
    */
   getDocumentWordCount(textDocument) {
     const match = textDocument.getText().match(RE_WORD);
+
+    if (!match) {
+      return 0;
+    } else {
+      return match.length;
+    }
+  }
+
+  /**
+   * Count the number of words in the given text. This function
+   * will be used to count the words before exporting to avoid
+   * couting the words inside the header.
+   * @param {String} text any text
+   * @return the number of words in the document
+   */
+  getTextWordCount(text) {
+    const match = text.match(RE_WORD);
 
     if (!match) {
       return 0;
@@ -486,6 +498,54 @@ class WorkspaceManager {
     }
 
     this.storyDataProvider.refresh();
+  }
+
+  /**
+   * Presents the user to the list of available templates and
+   * insert a header on the top of the file with the fields
+   * present in that template.
+   */
+  async insertMetadata() {
+    const textEditor = vscode.window.activeTextEditor;
+
+    if (!textEditor || !this.manager.isStory(textEditor.document.fileName)) {
+      return true;
+    }
+
+    const template = await showAvailableTemplatesDialog('Select the template');
+    const defaultValues = { title: this.visibleVersions[this.activeVersion].story.title, ...settings.getAuthorInfo() };
+
+    const metadataText = Exporter.getMetadataFromTemplate(template.id, defaultValues);
+    console.log(metadataText);
+    textEditor.edit((editBuilder) => {
+      editBuilder.insert(new vscode.Position(0, 0), metadataText);
+    });
+  }
+
+  /**
+   * Get story metadata. Tries to first get data from a header on the top
+   * of the file, then from the Settings.
+   * @param {vscode.TextEditor} textEditor the TextEditor holding the document
+   *    to be exported
+   * @param {Object} versionNode version TreeItem node
+   */
+  getStoryData(textEditor, versionNode) {
+    try {
+      const { metadata, content } = parseMD(textEditor.document.getText());
+
+      const authorInfo = Object.keys(metadata).length > 0 ? metadata : settings.getAuthorInfo();
+      const title = metadata.title ? metadata.title : versionNode.simpleStoryObj.title;
+      delete authorInfo.title;
+      
+      return {
+        title,
+        content,
+        word_count: this.getTextWordCount(content),
+        ...authorInfo,
+      }
+    } catch (e) {
+      vscode.window.showErrorMessage('There was an error trying to read the header contents.');
+    }
   }
 }
 

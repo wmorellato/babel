@@ -26,7 +26,7 @@
 		"onView:story-entries",
 		"workspaceContains:babel.json"
 	],
-	"main": "dist/babel.js",
+	"main": "src/extension.js",
 	"contributes": {
 		"commands": [
 			{
@@ -100,6 +100,11 @@
 				},
 				"category": "Explorer",
 				"title": "Refresh"
+			},
+			{
+				"command": "babel.insertMetadata",
+				"category": "Explorer",
+				"title": "Insert header"
 			}
 		],
 		"viewsContainers": {
@@ -171,6 +176,12 @@
 					"when": "view == story-entries && viewItem == version-item",
 					"group": "inline"
 				}
+			],
+			"editor/context": [
+				{
+					"command": "babel.insertMetadata",
+					"when": "versionIsOpen"
+				}
 			]
 		},
 		"configuration": {
@@ -238,6 +249,7 @@
 		"lint": "^0.7.0",
 		"lodash-id": "^0.14.0",
 		"lowdb": "^1.0.0",
+		"parse-md": "^2.0.4",
 		"rimraf": "^3.0.2",
 		"xml": "^1.0.1",
 		"xml2js": "^0.4.23"

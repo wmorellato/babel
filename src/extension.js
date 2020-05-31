@@ -20,6 +20,7 @@ function redirectCommandsToError(context) {
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeVersion', showError));
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeStory', showError));
   context.subscriptions.push(vscode.commands.registerCommand('babel.refreshExplorer', showError));
+  context.subscriptions.push(vscode.commands.registerCommand('babel.insertMetadata', showError));
 }
 
 /**
@@ -63,6 +64,7 @@ async function activate(context) {
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeVersion', (node) => workspace.removeVersion(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeStory', (node) => workspace.removeStory(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.refreshExplorer', () => workspace.updateViews()));
+  context.subscriptions.push(vscode.commands.registerCommand('babel.insertMetadata', () => workspace.insertMetadata()));
 }
 
 exports.activate = activate;
