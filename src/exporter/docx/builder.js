@@ -97,29 +97,16 @@ function createDocxParagraph(templateId, text) {
  *    the workspace
  */
 function replaceFields(documentText, paragraphs, storyDescriptor) {
-  let author = 'Author';
-  let email = 'E-mail';
-  let country = 'Country';
+  let _documentText = documentText;
 
-  if (storyDescriptor.author) {
-    author = storyDescriptor.author;
-  }
+  _documentText = _documentText.replace('{content}', paragraphs);
+  Object.keys(storyDescriptor).forEach((f) => {
+    if (f !== 'content' && storyDescriptor[f]) {
+      _documentText = _documentText.replace(new RegExp(`\{${f}\}`, 'g'), storyDescriptor[f]);
+    }
+  });
 
-  if (storyDescriptor.email) {
-    email = storyDescriptor.email;
-  }
-
-  if (storyDescriptor.country) {
-    country = storyDescriptor.country;
-  }
-
-  return documentText
-    .replace('{content}', paragraphs)
-    .replace('{title}', storyDescriptor.title)
-    .replace('{word_count}', storyDescriptor.word_count)
-    .replace(/\{author\}/g, author)
-    .replace('{email}', email)
-    .replace('{country}', country);
+  return _documentText;
 }
 
 /**
