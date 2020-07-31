@@ -26,7 +26,7 @@
 		"onView:story-entries",
 		"workspaceContains:babel.json"
 	],
-	"main": "dist/babel.js",
+	"main": "src/extension.js",
 	"contributes": {
 		"commands": [
 			{
@@ -233,6 +233,7 @@
 		"eslint": "^6.8.0",
 		"glob": "^7.1.6",
 		"mocha": "^7.1.2",
+		"nock": "^13.0.3",
 		"sinon": "^9.0.2",
 		"typescript": "^3.8.3",
 		"vscode-test": "^1.3.0",
@@ -245,12 +246,16 @@
 		"docx": "^5.0.2",
 		"docxtemplater": "^3.17.6",
 		"eol": "^0.9.1",
+		"google-auth-library": "^6.0.5",
+		"googleapis": "^57.0.0",
 		"jszip": "^3.4.0",
 		"lint": "^0.7.0",
 		"lodash-id": "^0.14.0",
 		"lowdb": "^1.0.0",
+		"open": "^7.1.0",
 		"parse-md": "^2.0.4",
 		"rimraf": "^3.0.2",
+		"server-destroy": "^1.0.1",
 		"xml": "^1.0.1",
 		"xml2js": "^0.4.23"
 	}
