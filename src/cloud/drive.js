@@ -1,10 +1,10 @@
 const fs = require('fs');
 const url = require('url');
 const path = require('path');
-const open = require('open');
 const http = require('http');
 const vscode = require('vscode');
 const crypto = require('../crypto');
+const open = require('open');
 const enableDestroy = require('server-destroy');
 const { OAuth2Client } = require('google-auth-library');
 
@@ -19,6 +19,9 @@ class DriveClient {
       clientId: CLIENT_ID,
       redirectUri: REDIRECT_URI,
     });
+
+    this.boundTokensEventListener = this.handleTokenRefresh.bind(this);
+    this.oAuth2Client.on('tokens', this.boundTokensEventListener);
   }
 
   /**
@@ -53,7 +56,8 @@ class DriveClient {
     .catch(() => this.getAccessToken())
     .then((token) => { 
       this.token = token;
-      this.oAuth2Client.setCredentials(token)
+      this.saveTokens(token);
+      this.oAuth2Client.setCredentials(token);
     })
     .catch((e) => {
       throw e;
@@ -91,7 +95,7 @@ class DriveClient {
    */
   getAccessToken() {
     const authUrl = this.oAuth2Client.generateAuthUrl({
-      access_type: 'online',
+      access_type: 'offline',
       scope: ['https://www.googleapis.com/auth/drive.file'],
     });
 
@@ -106,7 +110,11 @@ class DriveClient {
             server.destroy();
   
             const response = await this.oAuth2Client.getToken(code);
-            resolve(response.tokens);
+
+            resolve({
+              access_token: response.tokens.access_token,
+              refresh_token: response.tokens.refresh_token,
+            });
           }
         } catch (e) {
           server.destroy();
@@ -119,8 +127,27 @@ class DriveClient {
       enableDestroy(server);
     });
   }
-}
 
+  /**
+   * Handle token events issued by the lib.
+   * @param {Object} tokens new access token (or refresh token)
+   *    received by the lib
+   */
+  handleTokenRefresh(tokens) {
+    if (!tokens) {
+      return;
+    }
+
+    this.token = this.token || {};
+
+    if (tokens.refresh_token) {
+      this.token.refresh_token = tokens.refresh_token;
+    }
+
+    this.token.access_token = tokens.access_token;
+    this.oAuth2Client.setCredentials(this.token);
+  }
+}
 module.exports = {
   DriveClient,
 };
