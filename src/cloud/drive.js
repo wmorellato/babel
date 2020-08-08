@@ -6,6 +6,7 @@ const vscode = require('vscode');
 const crypto = require('../crypto');
 const open = require('open');
 const enableDestroy = require('server-destroy');
+const { google } = require('googleapis');
 const { OAuth2Client } = require('google-auth-library');
 
 const REDIRECT_URI_PORT = 13130
@@ -22,6 +23,7 @@ class DriveClient {
 
     this.boundTokensEventListener = this.handleTokenRefresh.bind(this);
     this.oAuth2Client.on('tokens', this.boundTokensEventListener);
+    this.drive = undefined;
   }
 
   /**
@@ -31,6 +33,17 @@ class DriveClient {
    */
   init() {
     return this.loadToken();
+  }
+
+  /**
+   * After getting the auth token, setup the client to perform
+   * Drive operations.
+   */
+  initClient() {
+    this.drive = google.drive({
+      version: 'v3',
+      auth: this.oAuth2Client
+    });
   }
 
   /**
@@ -58,6 +71,7 @@ class DriveClient {
       this.token = token;
       this.saveTokens(token);
       this.oAuth2Client.setCredentials(token);
+      this.initClient();
     })
     .catch((e) => {
       throw e;
@@ -111,10 +125,7 @@ class DriveClient {
   
             const response = await this.oAuth2Client.getToken(code);
 
-            resolve({
-              access_token: response.tokens.access_token,
-              refresh_token: response.tokens.refresh_token,
-            });
+            resolve(response.tokens);
           }
         } catch (e) {
           server.destroy();
@@ -134,10 +145,6 @@ class DriveClient {
    *    received by the lib
    */
   handleTokenRefresh(tokens) {
-    if (!tokens) {
-      return;
-    }
-
     this.token = this.token || {};
 
     if (tokens.refresh_token) {
@@ -146,8 +153,57 @@ class DriveClient {
 
     this.token.access_token = tokens.access_token;
     this.oAuth2Client.setCredentials(this.token);
+    this.saveTokens(this.token);
+  }
+
+  /**
+   * Update a backup file on Drive or creates a new one if none
+   * was uploaded before.
+   * @param {String} filePath path of the file to be uploaded
+   * @param {String} name the name of the backup file
+   * @returns {Promise} resolved when the file is successfully uploaded
+   */
+  uploadFile(filePath, name) {
+    const media = {
+      body: fs.createReadStream(filePath),
+    };
+
+    const requestBody = {
+      name
+    };
+
+    return this.listBackups()
+      .then((list) => {
+        if (list.length > 0) {
+          return this.drive.files.update({
+            fileId: list[0].id,
+            media,
+            requestBody
+          });
+        }
+
+        return this.drive.files.create({
+          media,
+          requestBody
+        });
+      });
+  }
+
+  /**
+   * List all backup files stored in Drive. The name of
+   * the backup files must begin with 'babel'.
+   * @returns {Promise<Array>} list of backup files stored in Drive
+   */
+  listBackups() {
+    return this.drive.files.list({
+      q: 'name contains \'babel\'',
+      spaces: 'drive',
+    }).then((response) => {
+      return response.data.files;
+    });
   }
 }
+
 module.exports = {
   DriveClient,
 };

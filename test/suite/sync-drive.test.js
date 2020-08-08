@@ -9,6 +9,7 @@ const rimraf = require('rimraf');
 const { expect } = require('chai');
 
 const TEMP_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'bab-'));
+const MOCK_FILE = path.join(TEMP_DIR, 'upload.bin');
 
 const mock_token = {
   'access_token': '1/fFAGRNJru1FTz70BzhT3Zg',
@@ -45,15 +46,32 @@ suite.only('drive sync tests', function () {
         reqheaders: {'content-type': 'application/x-www-form-urlencoded'},
       })
       .reply(200, mock_token2);
+    
+    nock('https://www.googleapis.com')
+      .persist()
+      .post('/upload/drive/v3/files')
+      .query(true)
+      .reply(200, {});
+
+    nock('https://www.googleapis.com')
+      .persist()
+      .patch('/upload/drive/v3/files/fakefileId')
+      .query(true)
+      .reply(200, {});
 
     nock.disableNetConnect();
     nock.enableNetConnect('127.0.0.1');
 
+    // test for upload
+    fs.writeFileSync(MOCK_FILE, 'The Waves Have Come');
+
     driveClient = new DriveClient();
+    await driveClient.init();
   });
 
   this.beforeEach(function () {
     sandbox.spy(driveClient);
+    sandbox.spy(driveClient.drive.files);
   });
 
   this.afterEach(function () {
@@ -75,6 +93,30 @@ suite.only('drive sync tests', function () {
     await driveClient.init();
 
     expect(driveClient.getAccessToken.calledOnce).to.be.equal(true);
+  });
+
+  test('should update file', async function () {
+    nock('https://www.googleapis.com')
+      .get('/drive/v3/files')
+      .query(true)
+      .reply(200, {
+        'files': [{ id: 'fakefileId' }],
+      });
+    
+    await driveClient.uploadFile(MOCK_FILE);
+    expect(driveClient.drive.files.update.calledOnce).to.be.equal(true);
+  });
+
+  test('should create file', async function () {
+    nock('https://www.googleapis.com')
+      .get('/drive/v3/files')
+      .query(true)
+      .reply(200, {
+        'files': [],
+      });
+
+    await driveClient.uploadFile(MOCK_FILE);
+    expect(driveClient.drive.files.create.calledOnce).to.be.equal(true);
   });
 
   test.skip('should request new token when stored is expired', async function () {
