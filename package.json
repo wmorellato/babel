@@ -241,6 +241,7 @@
 		"webpack-cli": "^3.3.11"
 	},
 	"dependencies": {
+		"@nodelib/fs.walk": "^1.2.4",
 		"adm-zip": "^0.4.14",
 		"dateformat": "^3.0.3",
 		"docx": "^5.0.2",

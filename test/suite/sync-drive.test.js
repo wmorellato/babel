@@ -33,7 +33,7 @@ require.cache[require.resolve('open')] = {
 
 const { DriveClient } = require('../../src/cloud/drive');
 
-suite.only('drive sync tests', function () {
+suite('drive sync tests', function () {
   const sandbox = sinon.createSandbox();
   let driveClient;
 

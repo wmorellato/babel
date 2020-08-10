@@ -8,7 +8,7 @@ const { BabelDb } = require('../../src/database');
 const { Manager } = require('../../src/manager');
 const settings = require('../../src/settings');
 
-suite('manager tests', function () {
+suite.only('manager tests', function () {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bab-'));
   const manager = new Manager(tempDir);
   const db = new BabelDb(tempDir);
@@ -95,5 +95,15 @@ suite('manager tests', function () {
     const storyPath = path.join(tempDir, storyId);
 
     expect(fs.existsSync(storyPath)).to.be.equal(false);
+  });
+
+  test.only('should create full backup file', async function () {
+    const { execSync } = require('child_process');
+    execSync(`cp -r ~/Documents/Babel/* ${manager.workspaceDirectory}`);
+
+    const options = { outputPath: '/home/wes/Documents' };
+    const backupFilePath = await manager.createBackup(options);
+
+    expect(fs.existsSync(backupFilePath)).to.be.equal(true);
   });
 })

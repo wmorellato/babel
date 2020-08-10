@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const rimrafSync = require('rimraf').sync;
+const fsWalk = require('@nodelib/fs.walk');
+const JSZip = require('jszip');
 const utils = require('./utils');
+const rimrafSync = require('rimraf').sync;
 const { BabelDb } = require('./database');
 const Errors = require('./errors');
 
@@ -293,6 +295,39 @@ class Manager {
   getVersionPath(storyId, versionName) {
     const normalizedName = utils.normalizeFilename(versionName);
     return path.join(this.workspaceDirectory, storyId, normalizedName + '.md');
+  }
+
+  createBackup(options) {
+    return new Promise((resolve, reject) => {
+      fsWalk.walk(this.workspaceDirectory, {
+        basePath: '',
+      }, (err, entries) => {
+        if (err) {
+          return reject(err);
+        }
+
+        resolve(entries);
+      });
+    }).then((entries) => {
+      const outputPath = options.outputPath || this.backupFolder;
+      const backupFile = path.join(outputPath, `babel-${new Date().toISOString().split('T')[0]}.backup.zip`);
+      const zip = new JSZip();
+
+      entries.forEach((e) => {
+        if (e.dirent.isFile()) {
+          const stream = fs.createReadStream(path.join(this.workspaceDirectory, e.path));
+          zip.file(e.path, stream);
+        }
+      });
+
+      return new Promise((resolve, reject) => {
+        zip
+          .generateNodeStream({ type: 'nodebuffer', 'compression': 'DEFLATE' })
+          .pipe(fs.createWriteStream(backupFile))
+          .on('finish', () => resolve(backupFile))
+          .on('error', () => { reject(); });
+      });
+    });
   }
 }
 
