@@ -97,7 +97,7 @@ suite.only('manager tests', function () {
     expect(fs.existsSync(storyPath)).to.be.equal(false);
   });
 
-  test.only('should create full backup file', async function () {
+  test('should create full backup file', async function () {
     const { execSync } = require('child_process');
     execSync(`cp -r ~/Documents/Babel/* ${manager.workspaceDirectory}`);
 
@@ -105,5 +105,19 @@ suite.only('manager tests', function () {
     const backupFilePath = await manager.createBackup(options);
 
     expect(fs.existsSync(backupFilePath)).to.be.equal(true);
+  });
+
+  test('should open backup file', async function () {
+    const tempBackupDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bab-backup'));
+    
+    storyId = manager.createNewStory().story.id;
+    const backupFilePath = await manager.createBackup({ outputPath: tempBackupDir });
+    manager.removeStory(storyId, true);
+
+    await manager.openBackup(backupFilePath);
+
+    const storyDirectory = path.join(tempDir, storyId);
+    expect(fs.lstatSync(storyDirectory).isDirectory()).to.be.equal(true);
+    expect(fs.existsSync(path.join(storyDirectory, 'draft.md'))).to.be.equal(true);
   });
 })

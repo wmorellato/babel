@@ -6,6 +6,7 @@ const utils = require('./utils');
 const rimrafSync = require('rimraf').sync;
 const { BabelDb } = require('./database');
 const Errors = require('./errors');
+const { resolve } = require('path');
 
 const Version = {
   DRAFT: 'draft',
@@ -297,10 +298,19 @@ class Manager {
     return path.join(this.workspaceDirectory, storyId, normalizedName + '.md');
   }
 
+  /**
+   * Creates a backup file of the entire workspace, excluding the tokens
+   * file.
+   * @param {Object} options properties of the backup file
+   * @param {String} options.outputPath the output path to save the backup file
+   * @param {String} options.backupName name of the backup file, defaults to
+   *    'babel-isoDate.backup.zip'
+   */
   createBackup(options) {
     return new Promise((resolve, reject) => {
       fsWalk.walk(this.workspaceDirectory, {
         basePath: '',
+        entryFilter: (entry) => !entry.name.endsWith('.token'),
       }, (err, entries) => {
         if (err) {
           return reject(err);
@@ -327,6 +337,38 @@ class Manager {
           .on('finish', () => resolve(backupFile))
           .on('error', () => { reject(); });
       });
+    });
+  }
+
+  /**
+   * Opens a backup file and extracts its contents in the Babel's current
+   * working directory.
+   * 
+   * Caution: this method overrides local files. Should be used with
+   * care.
+   * 
+   * @param {String} backupPath the location of the backup file. Only
+   *    file locations supported for now.
+   */
+  openBackup(backupPath) {
+    return new Promise(async (resolve) => {
+      const zipData = fs.readFileSync(backupPath);
+      
+      const zip  = await JSZip.loadAsync(zipData);
+
+      for (let entry of Object.keys(zip.files)) {
+        const destPath = path.join(this.workspaceDirectory, entry);
+
+        if (zip.files[entry].dir) {
+          fs.mkdirSync(destPath, { recursive: true });
+          continue;
+        }
+
+        const content = await zip.files[entry].async('nodebuffer');
+        fs.writeFileSync(destPath, content);
+      }
+
+      resolve();
     });
   }
 }
