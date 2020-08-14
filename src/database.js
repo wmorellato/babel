@@ -7,6 +7,7 @@ const Errors = require('./errors');
 const DB_FILE = 'babel.json';
 const STORIES_COLLECTION = 'stories';
 const VERSIONS_COLLECTION = 'versions';
+const BACKUP_COLLECTION = 'backups';
 
 class BabelDb {
   constructor(workspaceDir) {
@@ -15,7 +16,7 @@ class BabelDb {
     this.db = low(this.adapter);
     this.db._.mixin(lodashId);
 
-    this.db.defaults({ 'stories': [], 'versions': [] })
+    this.db.defaults({ 'stories': [], 'versions': [], 'backups': [] })
       .write();
   }
 
@@ -192,6 +193,29 @@ class BabelDb {
       .get(VERSIONS_COLLECTION)
       .removeWhere({ storyId: storyId })
       .write();
+  }
+
+  /**
+   * Insert a new backup entry in backup history.
+   * @param {Object} backupDescriptor object describing the backup
+   */
+  insertBackupEntry(backupDescriptor) {
+    this.db
+      .get(BACKUP_COLLECTION)
+      .insert(backupDescriptor)
+      .write();
+  }
+
+  /**
+   * Get entire backup history from database.
+   * @returns {Array} array containing all backup entries
+   */
+  getBackupEntries() {
+    return this.db
+      .read()
+      .get(BACKUP_COLLECTION)
+      .sortBy('timestamp')
+      .value();
   }
 
   /**
