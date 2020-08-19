@@ -198,6 +198,10 @@ class BabelDb {
   /**
    * Insert a new backup entry in backup history.
    * @param {Object} backupDescriptor object describing the backup
+   * @param {Number} backupDescriptor.timestamp timestamp in milliseconds
+   * @param {String} backupDescriptor.localPath local path of the backup file
+   * @param {Array} backupDescriptor.cloudProviders cloud storage providers to
+   *    where the backup was sent
    */
   insertBackupEntry(backupDescriptor) {
     this.db
@@ -214,7 +218,7 @@ class BabelDb {
     return this.db
       .read()
       .get(BACKUP_COLLECTION)
-      .sortBy('timestamp')
+      .sortBy(['timestamp'])
       .value();
   }
 

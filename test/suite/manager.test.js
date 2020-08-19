@@ -4,11 +4,9 @@ const path = require('path');
 const rimraf = require('rimraf').sync;
 const { expect } = require('chai');
 const { BabelDb } = require('../../src/database');
-
 const { Manager } = require('../../src/manager');
-const settings = require('../../src/settings');
 
-suite.only('manager tests', function () {
+suite('manager tests', function () {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bab-'));
   const manager = new Manager(tempDir);
   const db = new BabelDb(tempDir);
@@ -95,29 +93,5 @@ suite.only('manager tests', function () {
     const storyPath = path.join(tempDir, storyId);
 
     expect(fs.existsSync(storyPath)).to.be.equal(false);
-  });
-
-  test('should create full backup file', async function () {
-    const { execSync } = require('child_process');
-    execSync(`cp -r ~/Documents/Babel/* ${manager.workspaceDirectory}`);
-
-    const options = { outputPath: '/home/wes/Documents' };
-    const backupFilePath = await manager.createBackup(options);
-
-    expect(fs.existsSync(backupFilePath)).to.be.equal(true);
-  });
-
-  test('should open backup file', async function () {
-    const tempBackupDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bab-backup'));
-    
-    storyId = manager.createNewStory().story.id;
-    const backupFilePath = await manager.createBackup({ outputPath: tempBackupDir });
-    manager.removeStory(storyId, true);
-
-    await manager.openBackup(backupFilePath);
-
-    const storyDirectory = path.join(tempDir, storyId);
-    expect(fs.lstatSync(storyDirectory).isDirectory()).to.be.equal(true);
-    expect(fs.existsSync(path.join(storyDirectory, 'draft.md'))).to.be.equal(true);
   });
 })

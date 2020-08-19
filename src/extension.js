@@ -1,8 +1,6 @@
 const vscode = require('vscode');
 const resources = require('./vscode/resource-manager');
 const { isBabelWorkspace, WorkspaceManager } = require('./vscode/workspace');
-const { DriveClient } = require('./cloud/drive');
-
 
 /**
  * This is to block any command when the current workspace is not a Babel
@@ -29,8 +27,6 @@ function redirectCommandsToError(context) {
  * @param {vscode.ExtensionContext} context 
  */
 async function activate(context) {
-  const d = new DriveClient();
-
   if (!vscode.workspace.workspaceFolders) {
     return;
   }

@@ -3,7 +3,7 @@ const {
   expect
 } = require('chai');
 
-suite.only('crypto functions test', function () {
+suite('crypto functions test', function () {
   const data = { foo: 'bar' };
 
   test('should encrypt and decrypt data', async function () {
