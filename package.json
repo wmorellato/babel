@@ -3,7 +3,7 @@
 	"displayName": "Babel",
 	"publisher": "wmorellato",
 	"description": "An extension for writers to create and manage stories using VSCode.",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"license": "SEE LICENSE IN LICENSE.md",
 	"keywords": [
 		"writing",
@@ -14,6 +14,10 @@
 		"vscode": "^1.44.0"
 	},
 	"icon": "resources/logo-icon.png",
+	"galleryBanner": {
+        "color": "#36221b",
+        "theme": "dark"
+    },
 	"categories": [
 		"Other"
 	],
@@ -132,6 +136,11 @@
 					"id": "version-info",
 					"name": "Version information",
 					"when": "versionIsOpen"
+				},
+				{
+					"id": "backup-history",
+					"name": "Backup history",
+					"visibility": "collapsed"
 				}
 			]
 		},
@@ -212,6 +221,21 @@
 				"stories.authorInformation.country": {
 					"type": "string",
 					"description": "The country where you live. Feel free to fill this information directly on the exported file later."
+				},
+				"stories.backup.period": {
+					"type": "string",
+    				"default": "Weekly",
+					"enum": ["Daily", "Weekly", "Monthly"],
+					"description": "Period of backup operations. Backup is triggered on VSCode startup."
+				},
+				"stories.backup.cloudBackup.googleDrive": {
+					"type": "boolean",
+					"description": "Enables backup of Babel workspace using Google Drive. Upon enabling this options, you have to restart VSCode to trigger Google Drive setup."
+				},
+				"stories.backup.localBackup.path": {
+					"type": ["string", "null"],
+					"default": "null",
+					"description": "Path in local computer to store Babel backups. Defaults to Documents folder."
 				}
 			}
 		}
@@ -233,6 +257,7 @@
 		"eslint": "^6.8.0",
 		"glob": "^7.1.6",
 		"mocha": "^7.1.2",
+		"nock": "^13.0.3",
 		"sinon": "^9.0.2",
 		"typescript": "^3.8.3",
 		"vscode-test": "^1.3.0",
@@ -240,17 +265,22 @@
 		"webpack-cli": "^3.3.11"
 	},
 	"dependencies": {
+		"@nodelib/fs.walk": "^1.2.4",
 		"adm-zip": "^0.4.14",
 		"dateformat": "^3.0.3",
 		"docx": "^5.0.2",
 		"docxtemplater": "^3.17.6",
 		"eol": "^0.9.1",
+		"google-auth-library": "^6.0.5",
+		"googleapis": "^57.0.0",
 		"jszip": "^3.4.0",
 		"lint": "^0.7.0",
 		"lodash-id": "^0.14.0",
 		"lowdb": "^1.0.0",
+		"open": "^7.1.0",
 		"parse-md": "^2.0.4",
 		"rimraf": "^3.0.2",
+		"server-destroy": "^1.0.1",
 		"xml": "^1.0.1",
 		"xml2js": "^0.4.23"
 	}

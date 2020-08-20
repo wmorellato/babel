@@ -146,4 +146,16 @@ suite('database tests', function () {
     expect(story).to.be.equal(undefined);
     expect(versions.length).to.be.equal(0);
   });
+
+  test('should save new backup info', function () {
+    const backupEntry = {
+      providers: ['local', 'cloud'],
+      timestamp: Date.now(),
+    };
+
+    db.insertBackupEntry(backupEntry);
+    
+    const backups = db.getBackupEntries();
+    expect(backups).to.be.eql([backupEntry]);
+  });
 });

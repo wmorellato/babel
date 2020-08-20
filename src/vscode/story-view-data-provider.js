@@ -150,6 +150,54 @@ class StoryDataProvider {
   }
 }
 
+class BackupHistoryProvider {
+  constructor(backupHistory) {
+    this.history = backupHistory;
+    this._onDidChangeTreeData = new vscode.EventEmitter();
+    this.onDidChangeTreeData = this._onDidChangeTreeData.event;
+  }
+
+  /**
+   * Inherited method from TreeDataProvider
+   * @param {TreeItem} element 
+   */
+  getTreeItem(element) {
+    return element;
+  }
+
+  /**
+   * Inherited method from TreeDataProvider
+   * @param {TreeItem} element 
+   */
+  getChildren(element) {
+    if (element) {
+
+    } else {
+      return Promise.resolve(this.getBackupEntries());      
+    }
+  }
+
+  /**
+   * Refresh the view after a change
+   */
+  refresh() {
+    this._onDidChangeTreeData.fire();
+  }
+
+  /**
+   * Format backup entries from database.
+   */
+  getBackupEntries() {
+    const backupEntries = [];
+
+    this.history.forEach((story) => {
+      backupEntries.push(new BackupEntryItem(story));
+    });
+
+    return backupEntries;
+  }
+}
+
 /**
  * Visible story item in the TreeView
  */
@@ -226,7 +274,28 @@ class VersionItem extends vscode.TreeItem {
   }
 }
 
+class BackupEntryItem extends vscode.TreeItem {
+  constructor(backupEntry) {
+    super(backupEntry.timestamp, vscode.TreeItemCollapsibleState.None);
+
+    this.entry = backupEntry;
+    this.label = `${new Date(backupEntry.timestamp).toLocaleDateString()}`
+    this.tooltip = backupEntry.localPath;
+  }
+
+  get description() {
+    let description = 'local';
+
+    this.entry.cloudProviders.forEach((cp) => {
+      description += `, ${cp}`;
+    });
+
+    return description;
+  }
+}
+
 module.exports = {
   StoryDataProvider,
   VersionInfoProvider,
+  BackupHistoryProvider,
 };

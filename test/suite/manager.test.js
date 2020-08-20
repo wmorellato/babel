@@ -4,9 +4,7 @@ const path = require('path');
 const rimraf = require('rimraf').sync;
 const { expect } = require('chai');
 const { BabelDb } = require('../../src/database');
-
 const { Manager } = require('../../src/manager');
-const settings = require('../../src/settings');
 
 suite('manager tests', function () {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bab-'));

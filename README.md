@@ -51,6 +51,16 @@ Shuun                        | Mafagafo Faísca              | Trasgo
 :---------------------------:|:----------------------------:|:----------------------------:
 ![](images/shunn-export.png) |![](images/faisca-export.png) |![](images/trasgo-export.png) 
 
+## Backups
+
+Babel now stores backups of your workspace to ensure that, in case shit happens, your stories will be safe. You can configure the period of backup creations (daily, weekly or monthly), where they should be stores in your local computer and, optionally, save them on Google Drive.
+
+To enable Google Drive integration, you have to set the `stories.backup.cloudBackup.googleDrive` option in Settings, then restart VSCode to trigger the authentication/authorization routine. I use [OAuth2](https://developers.google.com/identity/protocols/oauth2) to access Google Drive API and perform the backups.
+
+> TODO: The page displayed after successful authentication is terrible. I'll make it better someday.
+
+> :warning: **Important** Babel does not ask or store your username and password to perform backups. We access Google API using an authentication token, which is stored in your workspace folder in the file `.token`. Also, the permissions requested by Babel to store backups only allow the extension to access Babel's own files; however, **don't share the token file with anyone**, unless you don't mind your stories being accessible to others.
+
 ## Settings
 
 - `stories.workspace.removeFiles`: if set, the extension will also remove files when removing a story or a version from the workspace. Set with care.
@@ -59,6 +69,9 @@ Shuun                        | Mafagafo Faísca              | Trasgo
 - `stories.authorInformation.penName`: author's pen name.
 - `stories.authorInformation.email`: author's e-mail.
 - `stories.authorInformation.country`: author's country.
+- `stories.backup.period`: period between backup operations.
+- `stories.backup.cloudBackup.googleDrive`: allow Google Drive integration.
+- `stories.backup.localBackup.path`: local path to store backup files.
 
 ### Markdown metadata
 
@@ -68,8 +81,6 @@ To insert the header in a version file, right-click on the editor and click the 
 
 ## Upcoming features
 
-- Integration with OneDrive, Google Drive and Dropbox to backup stories.
+- Integration with OneDrive and Dropbox to backup stories.
 - Linguistic analysis of texts.
-- Integration with *zen mode* in VSCode.
 - Integration with [The Grinder](https://thegrinder.diabolicalplots.com/).
-- Improve the exporter feature to supporte .rtf format.

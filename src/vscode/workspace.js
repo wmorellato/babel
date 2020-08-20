@@ -6,7 +6,7 @@ const parseMD = require('parse-md').default;
 const settings = require('../settings');
 const { Exporter } = require('../exporter');
 const { Manager, Version } = require('../manager');
-const { StoryDataProvider, VersionInfoProvider } = require('./story-view-data-provider');
+const { StoryDataProvider, VersionInfoProvider, BackupHistoryProvider } = require('./story-view-data-provider');
 const Errors = require('../errors');
 
 // word regex, compiling first
@@ -135,6 +135,19 @@ class WorkspaceManager {
 
     this.initProviders();
     this.initVersionInfoView();
+    this.initBackup();
+  }
+
+  initBackup() {
+    const backupOptions = settings.getBackupOptions();
+    this.manager.initBackupManager(backupOptions)
+      .then(() => {
+        vscode.window.showInformationMessage('Backup manager running.');
+      }).catch((e) => {
+        vscode.window.showErrorMessage(`Unable to start backup manager. Error: ${e}`, {
+          modal: true,
+        });
+      });
   }
 
   /**
@@ -165,11 +178,14 @@ class WorkspaceManager {
     this.visibleVersions = {};
     this.storyDataProvider = new StoryDataProvider(this.manager);
     this.versionInfoProvider = new VersionInfoProvider();
+    this.backupHistoryProvider = new BackupHistoryProvider(this.manager.db.getBackupEntries());
 
     // data provider for the main view
     vscode.window.registerTreeDataProvider('story-entries', this.storyDataProvider);
     // data provider for version info
     vscode.window.registerTreeDataProvider('version-info', this.versionInfoProvider);
+    // data provider for backup entries
+    vscode.window.registerTreeDataProvider('backup-history', this.backupHistoryProvider);
   }
 
   /**

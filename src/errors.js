@@ -1,4 +1,5 @@
 module.exports = {
+  INVALID_TOKEN: 'InvalidToken',
   INVALID_WORKSPACE_DIR_ERROR: 'InvalidWorkspaceDir',
   INVALID_DIR_ERROR: 'InvalidDirError',
   FILE_MISSING_ERROR: 'FileMissingError',
