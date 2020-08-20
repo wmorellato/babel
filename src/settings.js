@@ -37,7 +37,7 @@ function isHardDeleteSet() {
 
 function getBackupOptions() {
   const localBackupPath = vscode.workspace.getConfiguration('stories.backup.localBackup').get('path');
-  const backupPeriod = vscode.workspace.getConfiguration('stories.backup').get('period');
+  const backupPeriod = vscode.workspace.getConfiguration('stories.backup').get('period').toLowerCase();
   const isDriveEnabled = vscode.workspace.getConfiguration('stories.backup.cloudBackup').get('googleDrive');
   
   const options = {

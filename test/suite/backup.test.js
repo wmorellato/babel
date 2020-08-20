@@ -62,7 +62,7 @@ suite('backup tests', function () {
     expect(backupManager.cloudProviders[0] instanceof DriveClient).to.be.equal(true);
   });
 
-  test('should do backup on initialization', async function () {
+  test.skip('should do backup on initialization', async function () {
     manager.db.insertBackupEntry({
       timestamp: Date.now() - Period.DAILY * 2,
       localPath: 'foo/bar/foobar',
@@ -72,16 +72,13 @@ suite('backup tests', function () {
     const backupManager2 = new BackupManager(manager.workspaceDirectory, manager.db);
     sandbox.spy(backupManager2);
 
-    options.period /= 365;
+    options.period = Period.DAILY;
     await backupManager2.init(options);
 
     expect(backupManager2.doBackup.calledOnce).to.be.equal(true);
   });
 
   test('should create full backup file', async function () {
-    const { execSync } = require('child_process');
-    execSync(`cp -r ~/Documents/Babel/* ${manager.workspaceDirectory}`);
-
     const options = { outputPath: '/home/wes/Documents' };
     const backupFilePath = await backupManager.createBackup(options);
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.1] - 2020-08-20
+
+### Fixed
+
+- Fixed lower case comparison when reading backup period from Settings.
+
 ## [1.4.0] - 2020-08-20
 
 ### Added
