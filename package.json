@@ -3,7 +3,7 @@
 	"displayName": "Babel",
 	"publisher": "wmorellato",
 	"description": "An extension for writers to create and manage stories using VSCode.",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"license": "SEE LICENSE IN LICENSE.md",
 	"keywords": [
 		"writing",
@@ -14,6 +14,10 @@
 		"vscode": "^1.44.0"
 	},
 	"icon": "resources/logo-icon.png",
+	"galleryBanner": {
+        "color": "#36221b",
+        "theme": "dark"
+    },
 	"categories": [
 		"Other"
 	],
