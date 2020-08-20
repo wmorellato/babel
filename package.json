@@ -30,7 +30,7 @@
 		"onView:story-entries",
 		"workspaceContains:babel.json"
 	],
-	"main": "src/extension.js",
+	"main": "dist/babel.js",
 	"contributes": {
 		"commands": [
 			{

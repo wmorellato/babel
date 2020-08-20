@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0] - 2020-08-20
+
+### Added
+
+- Backup feature.
+- Google Drive integration for backups.
+- Backup history view to Story Explorer.
+
+### Changed
+
+- Extension icon and theme in Marketplace.
+
 ## [1.3.0] - 2020-05-31
 
 ### Added
