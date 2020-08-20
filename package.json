@@ -132,6 +132,11 @@
 					"id": "version-info",
 					"name": "Version information",
 					"when": "versionIsOpen"
+				},
+				{
+					"id": "backup-history",
+					"name": "Backup history",
+					"visibility": "collapsed"
 				}
 			]
 		},
