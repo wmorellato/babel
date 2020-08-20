@@ -34,6 +34,7 @@ class BackupManager {
   /**
    * Initializes the manager.
    * @param {Object} options specify backup options
+   * @param {Object} options.providers backup providers
    * @param {String} options.providers.local path in the local system to
    *    to store backups
    * @param {CloudProviders} options.providers.cloud list of cloud providers to upload
@@ -101,7 +102,7 @@ class BackupManager {
     const lastScheduledBackup = Date.now() - this.period;
     const backupHistory = this.db.getBackupEntries();
 
-    if (backupHistory && backupHistory[0].timestamp < lastScheduledBackup) {
+    if (!backupHistory || !backupHistory[0] || backupHistory[0].timestamp < lastScheduledBackup) {
       await this.doBackup();
     }
   }

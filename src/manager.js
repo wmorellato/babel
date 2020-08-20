@@ -3,6 +3,7 @@ const path = require('path');
 const utils = require('./utils');
 const rimrafSync = require('rimraf').sync;
 const { BabelDb } = require('./database');
+const { BackupManager } = require('./backup');
 const Errors = require('./errors');
 
 const Version = {
@@ -16,6 +17,11 @@ class Manager {
   constructor(workspaceDirectory) {
     this.workspaceDirectory = workspaceDirectory;
     this.db = new BabelDb(this.workspaceDirectory);
+    this.backupManager = new BackupManager(this.workspaceDirectory, this.db);
+  }
+
+  initBackupManager(options) {
+    return this.backupManager.init(options);
   }
 
   /**

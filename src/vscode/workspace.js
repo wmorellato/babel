@@ -135,6 +135,19 @@ class WorkspaceManager {
 
     this.initProviders();
     this.initVersionInfoView();
+    this.initBackup();
+  }
+
+  initBackup() {
+    const backupOptions = settings.getBackupOptions();
+    this.manager.initBackupManager(backupOptions)
+      .then(() => {
+        vscode.window.showInformationMessage('Backup manager running.');
+      }).catch((e) => {
+        vscode.window.showErrorMessage(`Unable to start backup manager. Error: ${e}`, {
+          modal: true,
+        });
+      });
   }
 
   /**

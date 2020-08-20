@@ -219,7 +219,8 @@ class BabelDb {
       .read()
       .get(BACKUP_COLLECTION)
       .sortBy(['timestamp'])
-      .value();
+      .value()
+      .reverse();
   }
 
   /**

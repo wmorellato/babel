@@ -212,6 +212,21 @@
 				"stories.authorInformation.country": {
 					"type": "string",
 					"description": "The country where you live. Feel free to fill this information directly on the exported file later."
+				},
+				"stories.backup.period": {
+					"type": "string",
+    				"default": "Weekly",
+					"enum": ["Daily", "Weekly", "Monthly"],
+					"description": "Period of backup operations. Backup is triggered on VSCode startup."
+				},
+				"stories.backup.cloudBackup.googleDrive": {
+					"type": "boolean",
+					"description": "Enables backup of Babel workspace using Google Drive. Upon enabling this options, you have to restart VSCode to trigger Google Drive setup."
+				},
+				"stories.backup.localBackup.path": {
+					"type": ["string", "null"],
+					"default": "null",
+					"description": "Path in local computer to store Babel backups. Defaults to Documents folder."
 				}
 			}
 		}
