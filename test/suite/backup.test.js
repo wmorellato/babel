@@ -79,7 +79,7 @@ suite('backup tests', function () {
   });
 
   test('should create full backup file', async function () {
-    const options = { outputPath: '/home/wes/Documents' };
+    const options = { outputPath: tempBackupDir };
     const backupFilePath = await backupManager.createBackup(options);
 
     expect(fs.existsSync(backupFilePath)).to.be.equal(true);
