@@ -13,7 +13,7 @@ const {
 const { BabelDb } = require('../../src/database');
 const { STORY_NOT_FOUND } = require('../../src/errors');
 
-suite('database tests', function () {
+suite.only('database tests', function () {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bab-'));
   const db = new BabelDb(tempDir);
 
@@ -157,5 +157,68 @@ suite('database tests', function () {
     
     const backups = db.getBackupEntries();
     expect(backups).to.be.eql([backupEntry]);
+  });
+
+  test('should insert activity entry', function () {
+    const firstEntry = {
+      date: '2020-03-15',
+      versionId: '0001',
+      wordCount: 1375,
+    };
+    
+    db.insertActivityEntry(firstEntry);
+    
+    let entries = db.getActivityHistory();
+    delete entries[0].id
+
+    expect(entries).to.be.eql([{
+      date: '2020-03-15',
+      entries: [{
+        versionId: '0001',
+        wordCount: 1375,
+      }]
+    }]);
+
+    const secondEntry = {
+      date: '2020-03-15',
+      versionId: '0002',
+      wordCount: 500,
+    };
+
+    db.insertActivityEntry(secondEntry);
+
+    entries = db.getActivityHistory();
+    delete entries[0].id
+    expect(entries).to.be.eql([{
+      date: '2020-03-15',
+      entries: [{
+        versionId: '0001',
+        wordCount: 1375,
+      }, {
+        versionId: '0002',
+        wordCount: 500,
+      }],
+    }]);
+
+    const thirdEntry = {
+      date: '2020-03-15',
+      versionId: '0002',
+      wordCount: 1000,
+    };
+
+    db.insertActivityEntry(thirdEntry);
+
+    entries = db.getActivityHistory();
+    delete entries[0].id
+    expect(entries).to.be.eql([{
+      date: '2020-03-15',
+      entries: [{
+        versionId: '0001',
+        wordCount: 1375,
+      }, {
+        versionId: '0002',
+        wordCount: 1000,
+      }],
+    }]);
   });
 });

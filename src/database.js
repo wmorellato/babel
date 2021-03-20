@@ -8,6 +8,7 @@ const DB_FILE = 'babel.json';
 const STORIES_COLLECTION = 'stories';
 const VERSIONS_COLLECTION = 'versions';
 const BACKUP_COLLECTION = 'backups';
+const ACTIVITY_COLLECTION = 'activity';
 
 class BabelDb {
   constructor(workspaceDir) {
@@ -16,7 +17,7 @@ class BabelDb {
     this.db = low(this.adapter);
     this.db._.mixin(lodashId);
 
-    this.db.defaults({ 'stories': [], 'versions': [], 'backups': [] })
+    this.db.defaults({ 'stories': [], 'versions': [], 'backups': [], 'activity': [] })
       .write();
   }
 
@@ -219,6 +220,62 @@ class BabelDb {
       .read()
       .get(BACKUP_COLLECTION)
       .sortBy(['timestamp'])
+      .value()
+      .reverse();
+  }
+
+  insertActivityEntry(entryDescriptor) {
+    let dayHistory = this.db
+      .read()
+      .get(ACTIVITY_COLLECTION)
+      .find({ date: entryDescriptor.date })
+      .value();
+
+    const entry = {
+      versionId: entryDescriptor.versionId,
+      wordCount: entryDescriptor.wordCount,
+    };
+
+    if (!dayHistory) {
+      // simply insert a new entry for the day
+      this.db
+        .get(ACTIVITY_COLLECTION)
+        .insert({
+          date: entryDescriptor.date,
+          entries: [entry],
+        })
+        .write();
+    } else {
+      // bit more tricky, we have to add the word count
+      // to the existing entry for that version
+      let found = false;
+      for (let i = 0; i < dayHistory.entries.length; i++) {
+        let e = dayHistory.entries[i];
+
+        if (e.versionId == entry.versionId) {
+          dayHistory.entries[i] = entry;
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        dayHistory.entries.push(entry);
+      }
+
+      this.db
+        .get(ACTIVITY_COLLECTION)
+        .filter({ date: entryDescriptor })
+        .update(dayHistory)
+        .write();
+    }
+  }
+
+  getActivityHistory() {
+    return this.db
+      .read()
+      .get(ACTIVITY_COLLECTION)
+      .sortBy(['date'])
       .value()
       .reverse();
   }
