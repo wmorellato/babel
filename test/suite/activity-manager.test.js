@@ -13,18 +13,11 @@ suite.only('activity manager tests', function () {
   const db = new BabelDb(tempDir);
   let actManager = new ActivityManager(tempDir);
 
-  let storyId = '123456';
-  let versionObj = {
-    storyId,
-    name: 'new version',
-    wordCount: 1000,
-    created: Date.now(),
-    statistics: {},
-  };
-
+  const storyObj = manager.createNewStory('new story');
+  const versionObj = storyObj.version;
+  versionObj.wordCount = 1000;
 
   this.beforeAll(function () {
-    db.drop();
     actManager.initDocument(versionObj);
   });
 
@@ -41,8 +34,9 @@ suite.only('activity manager tests', function () {
   test('should load activity from db', function () {
     db.insertActivityEntry({
       date: '2021-03-21',
-      storyId: storyId,
+      storyId: versionObj.storyId,
       wordCount: 500,
+      initialWordCount: versionObj.wordCount,
     });
 
     actManager = new ActivityManager(tempDir);
@@ -52,10 +46,21 @@ suite.only('activity manager tests', function () {
   });
 
   test('should get diff word count', function () {
-    versionObj.wordCount = 1500;
+    versionObj.wordCount = 1750;
     actManager.updateActivity(versionObj);
     const act = actManager.getActivityForStory(versionObj.storyId);
 
-    expect(act.sessionWordCount).to.be.equal(1000);
+    expect(act.sessionWordCount).to.be.equal(750);
   });
+
+  test('save activity to database', function () {
+    actManager.saveStoryActivity(versionObj);
+
+    const act = db.getActivityForDate('2021-03-21');
+    expect(act.entries).to.be.eql([{
+      storyId: versionObj.storyId,
+      wordCount: 750,
+      initialWordCount: 1000,
+    }])
+  })
 });

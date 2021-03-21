@@ -227,7 +227,9 @@ class BabelDb {
   /**
    * Insert an activity entry into the database.
    * @param {String} entryDescriptor.storyId story id
+   * @param {String} entryDescriptor.date entry date
    * @param {Number} entryDescriptor.wordCount word count of the current version
+   * @param {Number} entryDescriptor.initialWordCount word count at the beginning of a given session
    */
   insertActivityEntry(entryDescriptor) {
     let dayHistory = this.db
@@ -239,6 +241,7 @@ class BabelDb {
     const entry = {
       storyId: entryDescriptor.storyId,
       wordCount: entryDescriptor.wordCount,
+      initialWordCount: entryDescriptor.initialWordCount,
     };
 
     if (!dayHistory) {

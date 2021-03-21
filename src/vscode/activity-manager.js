@@ -25,7 +25,7 @@ class ActivityManager {
       actDate.entries.forEach((e) => {
         this.activityEntries[e.storyId] = {
           sessionWordCount: e.wordCount,
-          initialWordCount: e.wordCount,
+          initialWordCount: e.initialWordCount, // this is wrong
         };
       });
     }
@@ -50,6 +50,9 @@ class ActivityManager {
         sessionWordCount: 0,
         initialWordCount: versionObj.wordCount,
       }
+    } else {
+      const existingEntry = this.activityEntries[versionObj.storyId];
+      existingEntry.initialWordCount = versionObj.wordCount - existingEntry.sessionWordCount;
     }
   }
 
@@ -84,6 +87,27 @@ class ActivityManager {
     } else {
       this.activityEntries[versionObj.storyId].sessionWordCount = wordCountDiff;
     }
+  }
+
+  /**
+   * Save a single story activity into database.
+   * This is to be used when saving a document.
+   * @param {Object} versionObj version object
+   */
+  saveStoryActivity(versionObj) {
+    if (!Object.keys(this.activityEntries).includes(versionObj.storyId)) {
+      // this should never happen...
+      return;
+    }
+
+    const storyId = versionObj.storyId;
+
+    this.db.insertActivityEntry({
+      storyId,
+      date: this.identifier,
+      wordCount: this.activityEntries[storyId].sessionWordCount,
+      initialWordCount: this.activityEntries[storyId].initialWordCount,
+    })
   }
 }
 
