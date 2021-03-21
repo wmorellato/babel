@@ -224,6 +224,11 @@ class BabelDb {
       .reverse();
   }
 
+  /**
+   * Insert an activity entry into the database.
+   * @param {String} entryDescriptor.storyId story id
+   * @param {Number} entryDescriptor.wordCount word count of the current version
+   */
   insertActivityEntry(entryDescriptor) {
     let dayHistory = this.db
       .read()
@@ -271,6 +276,11 @@ class BabelDb {
     }
   }
 
+  /**
+   * Get the activity history stored into db. This is mainly to
+   * get the data required to feed the heatmap.
+   * @returns {Object} all activity history ordered by descending date
+   */
   getActivityHistory() {
     return this.db
       .read()
@@ -278,6 +288,25 @@ class BabelDb {
       .sortBy(['date'])
       .value()
       .reverse();
+  }
+
+  /**
+   * Get activity for a given date.
+   * @param {String} date string representing the date in format YYYY-MM-DD
+   * @returns database record for the given date, or null if non-existent
+   */
+  getActivityForDate(date) {
+    const actArray = this.db
+      .read()
+      .get(ACTIVITY_COLLECTION)
+      .filter({ date })
+      .value();
+    
+    if (actArray.length > 0) {
+      return actArray[0];
+    }
+
+    return null;
   }
 
   /**

@@ -94,4 +94,4 @@ suite('manager tests', function () {
 
     expect(fs.existsSync(storyPath)).to.be.equal(false);
   });
-})
+});

@@ -13,7 +13,7 @@ const {
 const { BabelDb } = require('../../src/database');
 const { STORY_NOT_FOUND } = require('../../src/errors');
 
-suite.only('database tests', function () {
+suite('database tests', function () {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bab-'));
   const db = new BabelDb(tempDir);
 
@@ -220,5 +220,21 @@ suite.only('database tests', function () {
         wordCount: 1000,
       }],
     }]);
+  });
+
+  test('should get activity for date', function () {
+    const act = db.getActivityForDate('2020-03-15');
+    delete act.id;
+
+    expect(act).to.be.eql({
+      date: '2020-03-15',
+      entries: [{
+        storyId: '0001',
+        wordCount: 1375,
+      }, {
+        storyId: '0002',
+        wordCount: 1000,
+      }],
+    });
   });
 });
