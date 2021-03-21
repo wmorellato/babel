@@ -232,7 +232,7 @@ class BabelDb {
       .value();
 
     const entry = {
-      versionId: entryDescriptor.versionId,
+      storyId: entryDescriptor.storyId,
       wordCount: entryDescriptor.wordCount,
     };
 
@@ -252,7 +252,7 @@ class BabelDb {
       for (let i = 0; i < dayHistory.entries.length; i++) {
         let e = dayHistory.entries[i];
 
-        if (e.versionId == entry.versionId) {
+        if (e.storyId == entry.storyId) {
           dayHistory.entries[i] = entry;
           found = true;
           break;

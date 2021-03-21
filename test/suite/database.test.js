@@ -162,7 +162,7 @@ suite.only('database tests', function () {
   test('should insert activity entry', function () {
     const firstEntry = {
       date: '2020-03-15',
-      versionId: '0001',
+      storyId: '0001',
       wordCount: 1375,
     };
     
@@ -174,14 +174,14 @@ suite.only('database tests', function () {
     expect(entries).to.be.eql([{
       date: '2020-03-15',
       entries: [{
-        versionId: '0001',
+        storyId: '0001',
         wordCount: 1375,
       }]
     }]);
 
     const secondEntry = {
       date: '2020-03-15',
-      versionId: '0002',
+      storyId: '0002',
       wordCount: 500,
     };
 
@@ -192,17 +192,17 @@ suite.only('database tests', function () {
     expect(entries).to.be.eql([{
       date: '2020-03-15',
       entries: [{
-        versionId: '0001',
+        storyId: '0001',
         wordCount: 1375,
       }, {
-        versionId: '0002',
+        storyId: '0002',
         wordCount: 500,
       }],
     }]);
 
     const thirdEntry = {
       date: '2020-03-15',
-      versionId: '0002',
+      storyId: '0002',
       wordCount: 1000,
     };
 
@@ -213,10 +213,10 @@ suite.only('database tests', function () {
     expect(entries).to.be.eql([{
       date: '2020-03-15',
       entries: [{
-        versionId: '0001',
+        storyId: '0001',
         wordCount: 1375,
       }, {
-        versionId: '0002',
+        storyId: '0002',
         wordCount: 1000,
       }],
     }]);
