@@ -45,6 +45,8 @@ class ActivityManager {
    * @param {Object} versionObj version object
    */
   initDocument(versionObj) {
+    console.log('Initializing document with descriptor', versionObj);
+    
     if (!Object.keys(this.activityEntries).includes(version.storyId)) {
       this.activityEntries[versionObj.storyId] = {
         sessionWordCount: 0,
