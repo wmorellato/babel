@@ -169,6 +169,7 @@ class WorkspaceManager {
     this.activeVersion = storyVersionObj.version.id;
     
     this.loadInfoForVersion(storyVersionObj);
+    this.activityManager.initDocument(storyVersionObj.version);
   }
 
   /**

@@ -1,6 +1,5 @@
 const moment = require('moment');
 const { BabelDb } = require('../database');
-const { version } = require('jszip');
 
 class ActivityManager {
   constructor(workspaceDirectory) {
@@ -47,7 +46,7 @@ class ActivityManager {
   initDocument(versionObj) {
     console.log('Initializing document with descriptor', versionObj);
     
-    if (!Object.keys(this.activityEntries).includes(version.storyId)) {
+    if (!Object.keys(this.activityEntries).includes(versionObj.storyId)) {
       this.activityEntries[versionObj.storyId] = {
         sessionWordCount: 0,
         initialWordCount: versionObj.wordCount,
@@ -83,7 +82,7 @@ class ActivityManager {
     }
 
     const wordCountDiff = versionObj.wordCount - this.activityEntries[versionObj.storyId].initialWordCount;
-
+    
     if (wordCountDiff < 0) {
       this.activityEntries[versionObj.storyId].sessionWordCount = 0;
     } else {
