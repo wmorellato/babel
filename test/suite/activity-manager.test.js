@@ -1,13 +1,14 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const moment = require('moment');
 const rimraf = require('rimraf').sync;
 const { expect } = require('chai');
 const { BabelDb } = require('../../src/database');
 const { Manager } = require('../../src/manager');
 const { ActivityManager } = require('../../src/vscode/activity-manager');
 
-suite.only('activity manager tests', function () {
+suite('activity manager tests', function () {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bab-'));
   const manager = new Manager(tempDir);
   const db = new BabelDb(tempDir);
@@ -33,7 +34,7 @@ suite.only('activity manager tests', function () {
 
   test('should load activity from db', function () {
     db.insertActivityEntry({
-      date: '2021-03-21',
+      date: moment().format('YYYY-MM-DD'),
       storyId: versionObj.storyId,
       wordCount: 500,
       initialWordCount: versionObj.wordCount,
@@ -56,7 +57,7 @@ suite.only('activity manager tests', function () {
   test('save activity to database', function () {
     actManager.saveStoryActivity(versionObj);
 
-    const act = db.getActivityForDate('2021-03-21');
+    const act = db.getActivityForDate(moment().format('YYYY-MM-DD'));
     expect(act.entries).to.be.eql([{
       storyId: versionObj.storyId,
       wordCount: 750,
