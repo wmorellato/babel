@@ -7,6 +7,7 @@ const settings = require('../settings');
 const { Exporter } = require('../exporter');
 const { Manager, Version } = require('../manager');
 const { ActivityManager } = require('./activity-manager');
+const { ActivityChartViewProvider } = require('./activity-view');
 const { StoryDataProvider, VersionInfoProvider, BackupHistoryProvider } = require('./story-view-data-provider');
 const Errors = require('../errors');
 
@@ -137,7 +138,14 @@ class WorkspaceManager {
 
     this.initProviders();
     this.initVersionInfoView();
+    this.initActivityView();
     // this.initBackup();
+  }
+
+  initActivityView() {
+    // activity chart
+    const provider = new ActivityChartViewProvider(this.context.extensionUri, this.workspaceDirectory);
+    this.context.subscriptions.push(vscode.window.registerWebviewViewProvider(provider.viewType, provider));
   }
 
   initBackup() {
