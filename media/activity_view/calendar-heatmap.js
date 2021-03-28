@@ -430,8 +430,7 @@ var calendarHeatmap = {
       return calendarHeatmap.settings.label_padding + moment(d.date).weekday() * (calendarHeatmap.settings.item_size + calendarHeatmap.settings.gutter);
     };
     var calcItemSize = function(d) {
-      if (max_value <= 0) { return calendarHeatmap.settings.item_size; }
-      return calendarHeatmap.settings.item_size * 0.75 + (calendarHeatmap.settings.item_size * d.total / max_value) * 0.25;
+      return calendarHeatmap.settings.item_size * 0.8;
     };
 
     calendarHeatmap.items.selectAll('.item-circle').remove();
