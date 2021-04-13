@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource}; script-src 'nonce-${nonce}';">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" type="text/css" href="${calendar-heatmap.min.css}">
+        
+        <title>Activity</title>
+    </head>
+    <body>
+        <div id="calendar"></div>
+
+        <script nonce="${nonce}" type="text/javascript" src="${calendar-heatmap.js}" charset="utf-8"></script>
+        <script nonce="${nonce}" type="text/javascript" src="${moment.min.js}" charset="utf-8"></script>
+        <script nonce="${nonce}" type="text/javascript" src="${d3.min.js}" charset="utf-8"></script>
+        <script nonce="${nonce}" type="text/javascript" src="${main.js}" charset="utf-8"></script>
+    </body>
+</html>

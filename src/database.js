@@ -8,6 +8,7 @@ const DB_FILE = 'babel.json';
 const STORIES_COLLECTION = 'stories';
 const VERSIONS_COLLECTION = 'versions';
 const BACKUP_COLLECTION = 'backups';
+const ACTIVITY_COLLECTION = 'activity';
 
 class BabelDb {
   constructor(workspaceDir) {
@@ -16,7 +17,7 @@ class BabelDb {
     this.db = low(this.adapter);
     this.db._.mixin(lodashId);
 
-    this.db.defaults({ 'stories': [], 'versions': [], 'backups': [] })
+    this.db.defaults({ 'stories': [], 'versions': [], 'backups': [], 'activity': [] })
       .write();
   }
 
@@ -221,6 +222,94 @@ class BabelDb {
       .sortBy(['timestamp'])
       .value()
       .reverse();
+  }
+
+  /**
+   * Insert an activity entry into the database.
+   * @param {String} entryDescriptor.storyId story id
+   * @param {String} entryDescriptor.date entry date
+   * @param {Number} entryDescriptor.wordCount word count of the current version
+   * @param {Number} entryDescriptor.initialWordCount word count at the beginning of a given session
+   */
+  insertActivityEntry(entryDescriptor) {
+    let dayHistory = this.db
+      .read()
+      .get(ACTIVITY_COLLECTION)
+      .find({ date: entryDescriptor.date })
+      .value();
+
+    const entry = {
+      storyId: entryDescriptor.storyId,
+      wordCount: entryDescriptor.wordCount,
+      initialWordCount: entryDescriptor.initialWordCount,
+    };
+
+    if (!dayHistory) {
+      // simply insert a new entry for the day
+      this.db
+        .get(ACTIVITY_COLLECTION)
+        .insert({
+          date: entryDescriptor.date,
+          entries: [entry],
+        })
+        .write();
+    } else {
+      // bit more tricky, we have to add the word count
+      // to the existing entry for that version
+      let found = false;
+      for (let i = 0; i < dayHistory.entries.length; i++) {
+        let e = dayHistory.entries[i];
+
+        if (e.storyId == entry.storyId) {
+          dayHistory.entries[i] = entry;
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        dayHistory.entries.push(entry);
+      }
+
+      this.db
+        .get(ACTIVITY_COLLECTION)
+        .filter({ date: entryDescriptor })
+        .update(dayHistory)
+        .write();
+    }
+  }
+
+  /**
+   * Get the activity history stored into db. This is mainly to
+   * get the data required to feed the heatmap.
+   * @returns {Object} all activity history ordered by descending date
+   */
+  getActivityHistory() {
+    return this.db
+      .read()
+      .get(ACTIVITY_COLLECTION)
+      .sortBy(['date'])
+      .value()
+      .reverse();
+  }
+
+  /**
+   * Get activity for a given date.
+   * @param {String} date string representing the date in format YYYY-MM-DD
+   * @returns database record for the given date, or null if non-existent
+   */
+  getActivityForDate(date) {
+    const actArray = this.db
+      .read()
+      .get(ACTIVITY_COLLECTION)
+      .filter({ date })
+      .value();
+    
+    if (actArray.length > 0) {
+      return actArray[0];
+    }
+
+    return null;
   }
 
   /**

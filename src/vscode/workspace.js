@@ -6,6 +6,8 @@ const parseMD = require('parse-md').default;
 const settings = require('../settings');
 const { Exporter } = require('../exporter');
 const { Manager, Version } = require('../manager');
+const { ActivityManager } = require('./activity-manager');
+const { ActivityChartViewProvider } = require('./activity-view');
 const { StoryDataProvider, VersionInfoProvider, BackupHistoryProvider } = require('./story-view-data-provider');
 const Errors = require('../errors');
 
@@ -132,10 +134,18 @@ class WorkspaceManager {
     this.workspaceDirectory = vscode.workspace.workspaceFolders[0].uri.fsPath;
     this.context = context;
     this.manager = new Manager(this.workspaceDirectory);
+    this.activityManager = new ActivityManager(this.workspaceDirectory);
 
     this.initProviders();
     this.initVersionInfoView();
-    this.initBackup();
+    this.initActivityView();
+    // this.initBackup();
+  }
+
+  initActivityView() {
+    // activity chart
+    const provider = new ActivityChartViewProvider(this.context.extensionUri, this.workspaceDirectory);
+    this.context.subscriptions.push(vscode.window.registerWebviewViewProvider(provider.viewType, provider));
   }
 
   initBackup() {
@@ -167,6 +177,7 @@ class WorkspaceManager {
     this.activeVersion = storyVersionObj.version.id;
     
     this.loadInfoForVersion(storyVersionObj);
+    this.activityManager.initDocument(storyVersionObj.version);
   }
 
   /**
@@ -239,6 +250,7 @@ class WorkspaceManager {
 
     return vscode.workspace.openTextDocument(versionPath).then((textDocument) => {
       this.updateVersionInfoData(simpleStoryObj, versionObj);
+      this.activityManager.initDocument(versionObj);
       
       return vscode.window.showTextDocument(textDocument);
     });
@@ -436,7 +448,7 @@ class WorkspaceManager {
   }
 
   /**
-   * Check if the TextEditor just select is a story or not, and if so
+   * Check if the TextEditor just selected is a story or not, and if so
    * load its info.
    * @param {vscode.TextEditor} textEditor TextEditor instance
    */
@@ -448,27 +460,48 @@ class WorkspaceManager {
     }
 
     const storyVersionObj = this.manager.loadVersionFromPath(textEditor.document.fileName);
-
-    if (!Object.keys(this.visibleVersions).includes(storyVersionObj.version.id)) {
-      storyVersionObj.version.wordCount = this.getDocumentWordCount(textEditor.document);
-    }
+    storyVersionObj.version.wordCount = this.getDocumentWordCount(textEditor.document);
 
     this.visibleVersions[storyVersionObj.version.id] = storyVersionObj;
     this.activeVersion = storyVersionObj.version.id;
 
     this.loadInfoForVersion(storyVersionObj);
+    this.activityManager.initDocument(storyVersionObj.version);
   }
 
   /**
    * Listener for document changes events. Calculate the number of words in the
    * document and print in the ViewInfo view.
+   * 
+   * TODO: Okay, BIG problem here. Story/version information stored in visibleVersions
+   * are out of sync from what is in database. This may bring further issues down the
+   * line. For now, since I'm only updating the word count, it's okay. But, boy, aren't
+   * you gonna regret this later.
+   * 
    * @param {vscode.TextDocumentChangeEvent} changeEvent event describing a document change
    */
   onDidDocumentChange(changeEvent) {
-    const numWords = this.getDocumentWordCount(changeEvent.document);
-    this.visibleVersions[this.activeVersion].version.wordCount = numWords;
+    if (!changeEvent || changeEvent.contentChanges.length == 0 || !this.manager.isStory(changeEvent.document.fileName)) {
+      return true;
+    }
 
-    this.loadInfoForVersion(this.visibleVersions[this.activeVersion]);
+    // here is the problem, I have to get info from db
+    const storyVersionObj = this.manager.loadVersionFromPath(changeEvent.document.fileName);
+    const versionId = storyVersionObj.version.id;
+    
+    // and here I have to update the word count for the version in visibleVersions
+    // and in the storyVersionObj
+    const numWords = this.getDocumentWordCount(changeEvent.document);
+
+    this.visibleVersions[versionId].version.wordCount = numWords;
+    storyVersionObj.version.wordCount = numWords;
+
+    // and here, finally, I pass the storyVersionObj. I would have to update every
+    // attribute for both of the instances
+    // I think the right thing to do would be create a separate storyVersionObj instead
+    // of using the one from db
+    this.loadInfoForVersion(storyVersionObj);
+    this.activityManager.updateActivity(this.visibleVersions[versionId].version);
   }
 
   /**
@@ -496,9 +529,13 @@ class WorkspaceManager {
     // when using "Save all..." not only the active editor will be saved, so I
     // need to flush every change to db
     const storyVersionObj = this.manager.loadVersionFromPath(documentWillSaveEvent.document.fileName);
+    const visibleVersion = this.visibleVersions[storyVersionObj.version.id].version;
 
-    this.visibleVersions[storyVersionObj.version.id].modified = Date.now();
-    this.manager.updateVersionInfo(this.visibleVersions[storyVersionObj.version.id].version);
+    visibleVersion.modified = Date.now();
+    storyVersionObj.version.wordCount = visibleVersion.wordCount; // same syncing problem
+
+    this.manager.updateVersionInfo(visibleVersion);
+    this.activityManager.saveStoryActivity(visibleVersion);
 
     if (storyVersionObj.version.id === this.activeVersion) {
       this.loadInfoForVersion(storyVersionObj);
@@ -530,9 +567,8 @@ class WorkspaceManager {
 
     const template = await showAvailableTemplatesDialog('Select the template');
     const defaultValues = { title: this.visibleVersions[this.activeVersion].story.title, ...settings.getAuthorInfo() };
-
     const metadataText = Exporter.getMetadataFromTemplate(template.id, defaultValues);
-    console.log(metadataText);
+
     textEditor.edit((editBuilder) => {
       editBuilder.insert(new vscode.Position(0, 0), metadataText);
     });

@@ -1,287 +1,300 @@
 {
-	"name": "babel",
-	"displayName": "Babel",
-	"publisher": "wmorellato",
-	"description": "An extension for writers to create and manage stories using VSCode.",
-	"version": "1.4.1",
-	"license": "SEE LICENSE IN LICENSE.md",
-	"keywords": [
-		"writing",
-		"stories",
-		"book"
-	],
-	"engines": {
-		"vscode": "^1.44.0"
-	},
-	"icon": "resources/logo-icon.png",
-	"galleryBanner": {
+    "name": "babel",
+    "displayName": "Babel",
+    "publisher": "wmorellato",
+    "description": "An extension for writers to create and manage stories using VSCode.",
+    "version": "1.5.0",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "keywords": [
+        "writing",
+        "stories",
+        "book"
+    ],
+    "engines": {
+        "vscode": "^1.54.0"
+    },
+    "icon": "resources/logo-icon.png",
+    "galleryBanner": {
         "color": "#36221b",
         "theme": "dark"
     },
-	"categories": [
-		"Other"
-	],
-	"homepage": "https://github.com/wmorellato/babel",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/wmorellato/babel.git"
-	},
-	"activationEvents": [
-		"onView:story-entries",
-		"workspaceContains:babel.json"
-	],
-	"main": "dist/babel.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "babel.newStory",
-				"icon": {
-					"dark": "resources/dark/add.svg",
-					"light": "resources/light/add.svg"
-				},
-				"category": "Stories",
-				"title": "New story"
-			},
-			{
-				"command": "babel.newVersion",
-				"icon": {
-					"dark": "resources/dark/add.svg",
-					"light": "resources/light/add.svg"
-				},
-				"category": "Stories",
-				"title": "New version"
-			},
-			{
-				"command": "babel.editStoryTitle",
-				"icon": {
-					"dark": "resources/dark/edit.svg",
-					"light": "resources/light/edit.svg"
-				},
-				"category": "Stories",
-				"title": "Edit title"
-			},
-			{
-				"command": "babel.exportToTemplate",
-				"icon": {
-					"dark": "resources/dark/export.svg",
-					"light": "resources/light/export.svg"
-				},
-				"category": "Stories",
-				"title": "Export to template"
-			},
-			{
-				"command": "babel.editVersionName",
-				"icon": {
-					"dark": "resources/dark/edit.svg",
-					"light": "resources/light/edit.svg"
-				},
-				"category": "Stories",
-				"title": "Edit version name"
-			},
-			{
-				"command": "babel.removeStory",
-				"icon": {
-					"dark": "resources/dark/remove.svg",
-					"light": "resources/light/remove.svg"
-				},
-				"category": "Stories",
-				"title": "Remove this story"
-			},
-			{
-				"command": "babel.removeVersion",
-				"icon": {
-					"dark": "resources/dark/remove.svg",
-					"light": "resources/light/remove.svg"
-				},
-				"category": "Stories",
-				"title": "Remove this version"
-			},
-			{
-				"command": "babel.refreshExplorer",
-				"icon": {
-					"dark": "resources/dark/refresh.svg",
-					"light": "resources/light/refresh.svg"
-				},
-				"category": "Explorer",
-				"title": "Refresh"
-			},
-			{
-				"command": "babel.insertMetadata",
-				"category": "Explorer",
-				"title": "Insert header"
-			}
-		],
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "story-explorer",
-					"title": "Story Explorer",
-					"icon": "resources/logo-bar.svg"
-				}
-			]
-		},
-		"viewsWelcome": [
-			{
-				"view": "story-entries",
-				"contents": "If you don't see any stories here, wait for it to load or create your first.\n[Add Story](command:babel.newStory)"
-			}
-		],
-		"views": {
-			"story-explorer": [
-				{
-					"id": "story-entries",
-					"name": "Stories"
-				},
-				{
-					"id": "version-info",
-					"name": "Version information",
-					"when": "versionIsOpen"
-				},
-				{
-					"id": "backup-history",
-					"name": "Backup history",
-					"visibility": "collapsed"
-				}
-			]
-		},
-		"menus": {
-			"view/title": [
-				{
-					"command": "babel.newStory",
-					"when": "view == story-entries",
-					"group": "navigation"
-				},
-				{
-					"command": "babel.refreshExplorer",
-					"when": "view == story-entries",
-					"group": "navigation"
-				}
-			],
-			"view/item/context": [
-				{
-					"command": "babel.newVersion",
-					"when": "view == story-entries && viewItem == story-item",
-					"group": "inline"
-				},
-				{
-					"command": "babel.editStoryTitle",
-					"when": "view == story-entries && viewItem == story-item"
-				},
-				{
-					"command": "babel.removeStory",
-					"when": "view == story-entries && viewItem == story-item"
-				},
-				{
-					"command": "babel.removeVersion",
-					"when": "view == story-entries && viewItem == version-item"
-				},
-				{
-					"command": "babel.exportToTemplate",
-					"when": "view == story-entries && viewItem == version-item",
-					"group": "inline"
-				},
-				{
-					"command": "babel.editVersionName",
-					"when": "view == story-entries && viewItem == version-item",
-					"group": "inline"
-				}
-			],
-			"editor/context": [
-				{
-					"command": "babel.insertMetadata",
-					"when": "versionIsOpen"
-				}
-			]
-		},
-		"configuration": {
-			"title": "Stories",
-			"properties": {
-				"stories.workspace.removeFiles": {
-					"type": "boolean",
-					"description": "If set, the extension will also remove files when removing a story or a version from the workspace. Set with care.",
-					"default": false
-				},
-				"stories.authorInformation.name": {
-					"type": "string",
-					"description": "Your real name. If you want to use a pen name, set the option below and fill the \"Pen name\" field."
-				},
-				"stories.authorInformation.usePenName": {
-					"type": "boolean",
-					"description": "If set, Babel will use the value in the field \"Pen name\" when exporting stories.",
-					"default": false
-				},
-				"stories.authorInformation.penName": {
-					"type": "string",
-					"description": "Your pen name. If you want to use this when exporting stories, check the option below."
-				},
-				"stories.authorInformation.email": {
-					"type": "string",
-					"description": "Your e-mail. Not required, but a lot of templates demand this. Feel free to fill this information directly on the exported file later."
-				},
-				"stories.authorInformation.country": {
-					"type": "string",
-					"description": "The country where you live. Feel free to fill this information directly on the exported file later."
-				},
-				"stories.backup.period": {
-					"type": "string",
-    				"default": "Weekly",
-					"enum": ["Daily", "Weekly", "Monthly"],
-					"description": "Period of backup operations. Backup is triggered on VSCode startup."
-				},
-				"stories.backup.cloudBackup.googleDrive": {
-					"type": "boolean",
-					"description": "Enables backup of Babel workspace using Google Drive. Upon enabling this options, you have to restart VSCode to trigger Google Drive setup."
-				},
-				"stories.backup.localBackup.path": {
-					"type": ["string", "null"],
-					"default": "null",
-					"description": "Path in local computer to store Babel backups. Defaults to Documents folder."
-				}
-			}
-		}
-	},
-	"scripts": {
-		"lint": "eslint .",
-		"pretest": "npm run lint",
-		"test": "node ./test/runTest.js",
-		"vscode:prepublish": "webpack --mode production",
-		"webpack": "webpack --mode development",
-		"webpack-dev": "webpack --mode development --watch"
-	},
-	"devDependencies": {
-		"@types/glob": "^7.1.1",
-		"@types/mocha": "^7.0.2",
-		"@types/node": "^13.11.0",
-		"@types/vscode": "^1.44.0",
-		"chai": "^4.2.0",
-		"eslint": "^6.8.0",
-		"glob": "^7.1.6",
-		"mocha": "^7.1.2",
-		"nock": "^13.0.3",
-		"sinon": "^9.0.2",
-		"typescript": "^3.8.3",
-		"vscode-test": "^1.3.0",
-		"webpack": "^4.43.0",
-		"webpack-cli": "^3.3.11"
-	},
-	"dependencies": {
-		"@nodelib/fs.walk": "^1.2.4",
-		"adm-zip": "^0.4.14",
-		"dateformat": "^3.0.3",
-		"docx": "^5.0.2",
-		"docxtemplater": "^3.17.6",
-		"eol": "^0.9.1",
-		"google-auth-library": "^6.0.5",
-		"googleapis": "^57.0.0",
-		"jszip": "^3.4.0",
-		"lint": "^0.7.0",
-		"lodash-id": "^0.14.0",
-		"lowdb": "^1.0.0",
-		"open": "^7.1.0",
-		"parse-md": "^2.0.4",
-		"rimraf": "^3.0.2",
-		"server-destroy": "^1.0.1",
-		"xml": "^1.0.1",
-		"xml2js": "^0.4.23"
-	}
+    "categories": [
+        "Other"
+    ],
+    "homepage": "https://github.com/wmorellato/babel",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/wmorellato/babel.git"
+    },
+    "activationEvents": [
+        "onView:story-entries",
+        "workspaceContains:babel.json"
+    ],
+    "main": "dist/babel.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "babel.newStory",
+                "icon": {
+                    "dark": "resources/dark/add.svg",
+                    "light": "resources/light/add.svg"
+                },
+                "category": "Stories",
+                "title": "New story"
+            },
+            {
+                "command": "babel.newVersion",
+                "icon": {
+                    "dark": "resources/dark/add.svg",
+                    "light": "resources/light/add.svg"
+                },
+                "category": "Stories",
+                "title": "New version"
+            },
+            {
+                "command": "babel.editStoryTitle",
+                "icon": {
+                    "dark": "resources/dark/edit.svg",
+                    "light": "resources/light/edit.svg"
+                },
+                "category": "Stories",
+                "title": "Edit title"
+            },
+            {
+                "command": "babel.exportToTemplate",
+                "icon": {
+                    "dark": "resources/dark/export.svg",
+                    "light": "resources/light/export.svg"
+                },
+                "category": "Stories",
+                "title": "Export to template"
+            },
+            {
+                "command": "babel.editVersionName",
+                "icon": {
+                    "dark": "resources/dark/edit.svg",
+                    "light": "resources/light/edit.svg"
+                },
+                "category": "Stories",
+                "title": "Edit version name"
+            },
+            {
+                "command": "babel.removeStory",
+                "icon": {
+                    "dark": "resources/dark/remove.svg",
+                    "light": "resources/light/remove.svg"
+                },
+                "category": "Stories",
+                "title": "Remove this story"
+            },
+            {
+                "command": "babel.removeVersion",
+                "icon": {
+                    "dark": "resources/dark/remove.svg",
+                    "light": "resources/light/remove.svg"
+                },
+                "category": "Stories",
+                "title": "Remove this version"
+            },
+            {
+                "command": "babel.refreshExplorer",
+                "icon": {
+                    "dark": "resources/dark/refresh.svg",
+                    "light": "resources/light/refresh.svg"
+                },
+                "category": "Explorer",
+                "title": "Refresh"
+            },
+            {
+                "command": "babel.insertMetadata",
+                "category": "Explorer",
+                "title": "Insert header"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "story-explorer",
+                    "title": "Story Explorer",
+                    "icon": "resources/logo-bar.svg"
+                }
+            ]
+        },
+        "viewsWelcome": [
+            {
+                "view": "story-entries",
+                "contents": "If you don't see any stories here, wait for it to load or create your first.\n[Add Story](command:babel.newStory)"
+            }
+        ],
+        "views": {
+            "story-explorer": [
+                {
+                    "id": "story-entries",
+                    "name": "Stories"
+                },
+                {
+                    "id": "version-info",
+                    "name": "Version information",
+                    "when": "versionIsOpen"
+                },
+                {
+                    "id": "backup-history",
+                    "name": "Backup history",
+                    "visibility": "collapsed"
+                },
+                {
+                    "type": "webview",
+                    "id": "babel.activityChartView",
+                    "name": "Activity"
+                }
+            ]
+        },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "babel.newStory",
+                    "when": "view == story-entries",
+                    "group": "navigation"
+                },
+                {
+                    "command": "babel.refreshExplorer",
+                    "when": "view == story-entries",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "babel.newVersion",
+                    "when": "view == story-entries && viewItem == story-item",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.editStoryTitle",
+                    "when": "view == story-entries && viewItem == story-item"
+                },
+                {
+                    "command": "babel.removeStory",
+                    "when": "view == story-entries && viewItem == story-item"
+                },
+                {
+                    "command": "babel.removeVersion",
+                    "when": "view == story-entries && viewItem == version-item"
+                },
+                {
+                    "command": "babel.exportToTemplate",
+                    "when": "view == story-entries && viewItem == version-item",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.editVersionName",
+                    "when": "view == story-entries && viewItem == version-item",
+                    "group": "inline"
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "babel.insertMetadata",
+                    "when": "versionIsOpen"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "Stories",
+            "properties": {
+                "stories.workspace.removeFiles": {
+                    "type": "boolean",
+                    "description": "If set, the extension will also remove files when removing a story or a version from the workspace. Set with care.",
+                    "default": false
+                },
+                "stories.authorInformation.name": {
+                    "type": "string",
+                    "description": "Your real name. If you want to use a pen name, set the option below and fill the \"Pen name\" field."
+                },
+                "stories.authorInformation.usePenName": {
+                    "type": "boolean",
+                    "description": "If set, Babel will use the value in the field \"Pen name\" when exporting stories.",
+                    "default": false
+                },
+                "stories.authorInformation.penName": {
+                    "type": "string",
+                    "description": "Your pen name. If you want to use this when exporting stories, check the option below."
+                },
+                "stories.authorInformation.email": {
+                    "type": "string",
+                    "description": "Your e-mail. Not required, but a lot of templates demand this. Feel free to fill this information directly on the exported file later."
+                },
+                "stories.authorInformation.country": {
+                    "type": "string",
+                    "description": "The country where you live. Feel free to fill this information directly on the exported file later."
+                },
+                "stories.backup.period": {
+                    "type": "string",
+                    "default": "Weekly",
+                    "enum": [
+                        "Daily",
+                        "Weekly",
+                        "Monthly"
+                    ],
+                    "description": "Period of backup operations. Backup is triggered on VSCode startup."
+                },
+                "stories.backup.cloudBackup.googleDrive": {
+                    "type": "boolean",
+                    "description": "Enables backup of Babel workspace using Google Drive. Upon enabling this options, you have to restart VSCode to trigger Google Drive setup."
+                },
+                "stories.backup.localBackup.path": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "default": "null",
+                    "description": "Path in local computer to store Babel backups. Defaults to Documents folder."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "lint": "eslint .",
+        "pretest": "npm run lint",
+        "test": "node ./test/runTest.js",
+        "vscode:prepublish": "webpack --mode production",
+        "webpack": "webpack --mode development",
+        "webpack-dev": "webpack --mode development --watch"
+    },
+    "devDependencies": {
+        "@types/glob": "^7.1.3",
+        "@types/mocha": "^7.0.2",
+        "@types/node": "^13.13.46",
+        "@types/vscode": "^1.54.0",
+        "chai": "^4.3.4",
+        "eslint": "^6.8.0",
+        "glob": "^7.1.6",
+        "mocha": "^7.2.0",
+        "nock": "^13.0.11",
+        "sinon": "^9.2.4",
+        "typescript": "^3.9.9",
+        "vscode-test": "^1.5.1",
+        "webpack": "^4.46.0",
+        "webpack-cli": "^3.3.12"
+    },
+    "dependencies": {
+        "@nodelib/fs.walk": "^1.2.6",
+        "adm-zip": "^0.4.16",
+        "dateformat": "^3.0.3",
+        "docx": "^5.5.0",
+        "docxtemplater": "^3.21.1",
+        "eol": "^0.9.1",
+        "google-auth-library": "^6.1.6",
+        "googleapis": "^57.0.0",
+        "jszip": "^3.6.0",
+        "lint": "^0.7.0",
+        "lodash-id": "^0.14.0",
+        "lowdb": "^1.0.0",
+        "moment": "^2.29.1",
+        "open": "^7.4.2",
+        "parse-md": "^2.0.4",
+        "rimraf": "^3.0.2",
+        "server-destroy": "^1.0.1",
+        "xml": "^1.0.1",
+        "xml2js": "^0.4.23"
+    }
 }

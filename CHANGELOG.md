@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0] - 2021-04-13
+
+### Added
+
+- Activity tracking.
+### Fixed
+
+- Issue when counting words for a given document.
 ## [1.4.1] - 2020-08-20
 
 ### Fixed

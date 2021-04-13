@@ -158,4 +158,83 @@ suite('database tests', function () {
     const backups = db.getBackupEntries();
     expect(backups).to.be.eql([backupEntry]);
   });
+
+  test('should insert activity entry', function () {
+    const firstEntry = {
+      date: '2020-03-15',
+      storyId: '0001',
+      wordCount: 1375,
+    };
+    
+    db.insertActivityEntry(firstEntry);
+    
+    let entries = db.getActivityHistory();
+    delete entries[0].id
+
+    expect(entries).to.be.eql([{
+      date: '2020-03-15',
+      entries: [{
+        storyId: '0001',
+        wordCount: 1375,
+      }]
+    }]);
+
+    const secondEntry = {
+      date: '2020-03-15',
+      storyId: '0002',
+      wordCount: 500,
+    };
+
+    db.insertActivityEntry(secondEntry);
+
+    entries = db.getActivityHistory();
+    delete entries[0].id
+    expect(entries).to.be.eql([{
+      date: '2020-03-15',
+      entries: [{
+        storyId: '0001',
+        wordCount: 1375,
+      }, {
+        storyId: '0002',
+        wordCount: 500,
+      }],
+    }]);
+
+    const thirdEntry = {
+      date: '2020-03-15',
+      storyId: '0002',
+      wordCount: 1000,
+    };
+
+    db.insertActivityEntry(thirdEntry);
+
+    entries = db.getActivityHistory();
+    delete entries[0].id
+    expect(entries).to.be.eql([{
+      date: '2020-03-15',
+      entries: [{
+        storyId: '0001',
+        wordCount: 1375,
+      }, {
+        storyId: '0002',
+        wordCount: 1000,
+      }],
+    }]);
+  });
+
+  test('should get activity for date', function () {
+    const act = db.getActivityForDate('2020-03-15');
+    delete act.id;
+
+    expect(act).to.be.eql({
+      date: '2020-03-15',
+      entries: [{
+        storyId: '0001',
+        wordCount: 1375,
+      }, {
+        storyId: '0002',
+        wordCount: 1000,
+      }],
+    });
+  });
 });

@@ -61,6 +61,11 @@ To enable Google Drive integration, you have to set the `stories.backup.cloudBac
 
 > :warning: **Important** Babel does not ask or store your username and password to perform backups. We access Google API using an authentication token, which is stored in your workspace folder in the file `.token`. Also, the permissions requested by Babel to store backups only allow the extension to access Babel's own files; however, **don't share the token file with anyone**, unless you don't mind your stories being accessible to others.
 
+### Activity History
+
+Added a new view that displays how many words were written on each day, and for which stories. Using the new [Webview API](https://code.visualstudio.com/api/extension-guides/webview) and also the awesome [Calendar heatmap graph](https://github.com/g1eb/calendar-heatmap) library. Below is an example for this view.
+
+![](images/img2.png)
 ## Settings
 
 - `stories.workspace.removeFiles`: if set, the extension will also remove files when removing a story or a version from the workspace. Set with care.
