@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.1] - 2021-05-29
+
+### Fixed
+
+- Backup feature was not functioning as I forgot to uncomment it before releasing 1.5.0...
+
 ## [1.5.0] - 2021-04-13
 
 ### Added

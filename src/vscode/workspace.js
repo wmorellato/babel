@@ -139,7 +139,7 @@ class WorkspaceManager {
     this.initProviders();
     this.initVersionInfoView();
     this.initActivityView();
-    // this.initBackup();
+    this.initBackup();
   }
 
   initActivityView() {
