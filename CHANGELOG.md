@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.0] - 2021-09-18
+
+### Changed
+
+- The status on the right of a story's title was changed to show if the story was revised/eddited (○) and translated (●). I changed this as I was getting lost on which ones were ready for submission. It used to show the number of versions.
+
 ## [1.5.1] - 2021-05-29
 
 ### Fixed
