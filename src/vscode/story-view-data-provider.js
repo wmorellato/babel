@@ -231,8 +231,6 @@ class StoryItem extends vscode.TreeItem {
     let indicator = '';
 
     if (this.versionNames.length > 0) {
-      console.log(this.versionNames);
-
       if (this.versionNames.includes(Version.REVISION)) {
         indicator = '○';
       }
