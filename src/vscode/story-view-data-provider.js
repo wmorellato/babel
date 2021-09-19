@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const dateformat = require('dateformat');
 const resources = require('./resource-manager');
+const { Version } = require('../manager');
 
 class VersionInfoProvider {
   constructor(storyObj, versionObj) {
@@ -126,7 +127,11 @@ class StoryDataProvider {
     const stories = [];
 
     this.manager.db.getAllStories('created').forEach((story) => {
-      stories.push(new StoryItem(story, vscode.TreeItemCollapsibleState.Collapsed));
+      const versionNames = story.versions.map((v) => {
+        return this.manager.db.getVersionById(v).name;
+      });
+
+      stories.push(new StoryItem(story, versionNames, vscode.TreeItemCollapsibleState.Collapsed));
     });
 
     return stories;
@@ -202,13 +207,14 @@ class BackupHistoryProvider {
  * Visible story item in the TreeView
  */
 class StoryItem extends vscode.TreeItem {
-  constructor(storyObj, collapsibleState) {
+  constructor(storyObj, versionNames, collapsibleState) {
     super(storyObj.title, collapsibleState);
 
     this.story = storyObj
     this.label = storyObj.title;
     this.contextValue = 'story-item';
     this.collapsibleState = collapsibleState;
+    this.versionNames = versionNames;
 
     const iconName = this.story.title[0].toLowerCase() + '.svg';
     this.iconPath = {
@@ -222,15 +228,21 @@ class StoryItem extends vscode.TreeItem {
   }
 
   get description() {
-    const numVersions = this.story.versions.length;
+    let indicator = '';
 
-    if (numVersions === 1) {
-      return `${numVersions} version`;
-    } else if (numVersions === 0) {
-      return 'No version';
-    } else {
-      return `${numVersions} versions`;
+    if (this.versionNames.length > 0) {
+      console.log(this.versionNames);
+
+      if (this.versionNames.includes(Version.REVISION)) {
+        indicator = '○';
+      }
+
+      if (this.versionNames.includes(Version.TRANSLATION)) {
+        indicator = '●';
+      }
     }
+
+    return indicator;
   }
 }
 
