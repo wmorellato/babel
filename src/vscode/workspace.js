@@ -599,6 +599,29 @@ class WorkspaceManager {
       vscode.window.showErrorMessage('There was an error trying to read the header contents.');
     }
   }
+
+  /**
+   * Return the word count for the text currently selected.
+   * @param {vscode.TextDocument} document current document
+   * @param {vscode.Position} position current position
+   * @param {vscode.CancellationToken} token a cancellation token
+   */
+  wordCountHoverProvider(document, position, token) {
+    const activeTextEditor = vscode.window.activeTextEditor;
+
+    if (!activeTextEditor || !this.manager.isStory(activeTextEditor.document.fileName)) {
+      return true;
+    }
+
+    if (activeTextEditor.selection.isEmpty || !activeTextEditor.selection.contains(position)) {
+      return true;
+    }
+
+    let selectedText = activeTextEditor.document.getText(activeTextEditor.selection);
+    let wordCount = this.getTextWordCount(selectedText);
+
+    return new vscode.Hover(`${wordCount} words  \n${selectedText.length} characters`);
+  }
 }
 
 module.exports = {
