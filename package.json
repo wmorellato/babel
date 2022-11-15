@@ -281,7 +281,7 @@
         "adm-zip": "^0.4.16",
         "dateformat": "^3.0.3",
         "docx": "^5.5.0",
-        "docxtemplater": "^3.21.1",
+        "docxtemplater": "^3.32.4",
         "eol": "^0.9.1",
         "google-auth-library": "^6.1.6",
         "googleapis": "^57.0.0",
