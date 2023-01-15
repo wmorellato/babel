@@ -286,7 +286,7 @@
         "google-auth-library": "^6.1.6",
         "googleapis": "^57.0.0",
         "jszip": "^3.7.0",
-        "lint": "^0.7.0",
+        "lint": "^0.8.19",
         "lodash-id": "^0.14.0",
         "lowdb": "^1.0.0",
         "moment": "^2.29.4",
