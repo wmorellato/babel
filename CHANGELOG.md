@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0] - 2022-??-??
+
+### Added
+
+- Counting words when hovering over a text selection.
+
+## [1.7.0] - 2022-??-??
+
+### Added
+
+- Activity view showing which stories were changed and how many words were written on any given day.
+
 ## [1.6.0] - 2021-09-18
 
 ### Changed
