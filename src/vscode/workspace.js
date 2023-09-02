@@ -501,7 +501,10 @@ class WorkspaceManager {
     // I think the right thing to do would be create a separate storyVersionObj instead
     // of using the one from db
     this.loadInfoForVersion(storyVersionObj);
-    this.activityManager.updateActivity(this.visibleVersions[versionId].version);
+
+    if (![Version.REVISION, Version.TRANSLATION].includes(storyVersionObj.version.name)) {
+      this.activityManager.updateActivity(this.visibleVersions[versionId].version);
+    }
   }
 
   /**
@@ -526,7 +529,7 @@ class WorkspaceManager {
       return true;
     }
 
-    // when using "Save all..." not only the active editor will be saved, so I
+    // when using "Save all..." all editors will be saved, so I
     // need to flush every change to db
     const storyVersionObj = this.manager.loadVersionFromPath(documentWillSaveEvent.document.fileName);
     const visibleVersion = this.visibleVersions[storyVersionObj.version.id].version;
@@ -535,7 +538,10 @@ class WorkspaceManager {
     storyVersionObj.version.wordCount = visibleVersion.wordCount; // same syncing problem
 
     this.manager.updateVersionInfo(visibleVersion);
-    this.activityManager.saveStoryActivity(visibleVersion);
+
+    if (![Version.REVISION, Version.TRANSLATION].includes(visibleVersion.name)) {
+      this.activityManager.saveStoryActivity(visibleVersion);
+    }
 
     if (storyVersionObj.version.id === this.activeVersion) {
       this.loadInfoForVersion(storyVersionObj);
@@ -555,7 +561,7 @@ class WorkspaceManager {
 
   /**
    * Presents the user to the list of available templates and
-   * insert a header on the top of the file with the fields
+   * inserts a header at the top of the file with the fields
    * present in that template.
    */
   async insertMetadata() {
@@ -575,7 +581,7 @@ class WorkspaceManager {
   }
 
   /**
-   * Get story metadata. Tries to first get data from a header on the top
+   * Get story metadata. Tries to first get data from a header at the top
    * of the file, then from the Settings.
    * @param {vscode.TextEditor} textEditor the TextEditor holding the document
    *    to be exported
@@ -598,6 +604,29 @@ class WorkspaceManager {
     } catch (e) {
       vscode.window.showErrorMessage('There was an error trying to read the header contents.');
     }
+  }
+
+  /**
+   * Return the word count for the text currently selected.
+   * @param {vscode.TextDocument} document current document
+   * @param {vscode.Position} position current position
+   * @param {vscode.CancellationToken} token a cancellation token
+   */
+  wordCountHoverProvider(document, position, token) {
+    const activeTextEditor = vscode.window.activeTextEditor;
+
+    if (!activeTextEditor || !this.manager.isStory(activeTextEditor.document.fileName)) {
+      return true;
+    }
+
+    if (activeTextEditor.selection.isEmpty || !activeTextEditor.selection.contains(position)) {
+      return true;
+    }
+
+    let selectedText = activeTextEditor.document.getText(activeTextEditor.selection);
+    let wordCount = this.getTextWordCount(selectedText);
+
+    return new vscode.Hover(`${wordCount} words  \n${selectedText.length} characters`);
   }
 }
 

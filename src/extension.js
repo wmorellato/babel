@@ -65,6 +65,8 @@ async function activate(context) {
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeStory', (node) => workspace.removeStory(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.refreshExplorer', () => workspace.updateViews()));
   context.subscriptions.push(vscode.commands.registerCommand('babel.insertMetadata', () => workspace.insertMetadata()));
+
+  vscode.languages.registerHoverProvider('markdown', { provideHover: (document, position, token) => workspace.wordCountHoverProvider(document, position, token) });
 }
 
 exports.activate = activate;
