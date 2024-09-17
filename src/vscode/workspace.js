@@ -3,6 +3,7 @@ const path = require('path');
 const util = require('util');
 const vscode = require('vscode');
 const parseMD = require('parse-md').default;
+const utils = require('../utils');
 const settings = require('../settings');
 const { Exporter } = require('../exporter');
 const { Manager, Version } = require('../manager');
@@ -478,6 +479,8 @@ class WorkspaceManager {
    * line. For now, since I'm only updating the word count, it's okay. But, boy, aren't
    * you gonna regret this later.
    * 
+   * Update 17-09-2024: No regrets as I have no idea anymore of what this does.
+   * 
    * @param {vscode.TextDocumentChangeEvent} changeEvent event describing a document change
    */
   onDidDocumentChange(changeEvent) {
@@ -546,6 +549,12 @@ class WorkspaceManager {
     if (storyVersionObj.version.id === this.activeVersion) {
       this.loadInfoForVersion(storyVersionObj);
     }
+
+    const textEditor = vscode.window.visibleTextEditors.find(
+      editor => editor.document.uri.toString() === documentWillSaveEvent.document.uri.toString()
+    );
+    const characters = this.getCharactersFromMetadata(textEditor);
+    this.highlightCharacters(textEditor, characters);
   }
 
   /**
@@ -627,6 +636,40 @@ class WorkspaceManager {
     let wordCount = this.getTextWordCount(selectedText);
 
     return new vscode.Hover(`${wordCount} words  \n${selectedText.length} characters`);
+  }
+
+  getCharactersFromMetadata(textEditor) {
+    try {
+      const { metadata, content } = parseMD(textEditor.document.getText());
+      const characters = metadata.characters ? metadata.characters : '';
+
+      return characters.split(',').map(character => character.trim());
+    } catch (e) {
+      vscode.window.showErrorMessage('There was an error trying to read the header contents.');
+    }
+  }
+
+  highlightCharacters(textEditor, characters) {
+    const text = textEditor.document.getText();
+
+    characters.forEach(character => {
+        const regex = new RegExp(`\\b${character}\\b`, 'gi');
+        const decorationsArray = [];
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+            const startPos = textEditor.document.positionAt(match.index);
+            const endPos = textEditor.document.positionAt(match.index + match[0].length);
+            const decoration = { range: new vscode.Range(startPos, endPos) };
+            decorationsArray.push(decoration);
+        }
+
+        const color = utils.generateUniqueColor(character);
+        const decorationType = vscode.window.createTextEditorDecorationType({
+            backgroundColor: color,
+        });
+
+        textEditor.setDecorations(decorationType, decorationsArray);
+    });
   }
 }
 
