@@ -30,7 +30,7 @@
         "onView:story-entries",
         "workspaceContains:babel.json"
     ],
-    "main": "dist/babel.js",
+    "main": "src/extension.js",
     "contributes": {
         "commands": [
             {
@@ -44,37 +44,31 @@
             },
             {
                 "command": "babel.newVersion",
-                "icon": {
-                    "dark": "resources/dark/add.svg",
-                    "light": "resources/light/add.svg"
-                },
+                "icon": "$(new-file)",
                 "category": "Stories",
                 "title": "New version"
             },
             {
                 "command": "babel.editStoryTitle",
-                "icon": {
-                    "dark": "resources/dark/edit.svg",
-                    "light": "resources/light/edit.svg"
-                },
+                "icon": "$(edit)",
                 "category": "Stories",
                 "title": "Edit title"
             },
             {
                 "command": "babel.exportToTemplate",
-                "icon": {
-                    "dark": "resources/dark/export.svg",
-                    "light": "resources/light/export.svg"
-                },
+                "icon": "$(notebook-template)",
                 "category": "Stories",
                 "title": "Export to template"
             },
             {
+                "command": "babel.sendToKindle",
+                "icon": "$(device-mobile)",
+                "category": "Stories",
+                "title": "Send to Kindle"
+            },
+            {
                 "command": "babel.editVersionName",
-                "icon": {
-                    "dark": "resources/dark/edit.svg",
-                    "light": "resources/light/edit.svg"
-                },
+                "icon": "$(edit)",
                 "category": "Stories",
                 "title": "Edit version name"
             },
@@ -182,6 +176,11 @@
                 },
                 {
                     "command": "babel.exportToTemplate",
+                    "when": "view == story-entries && viewItem == version-item",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.sendToKindle",
                     "when": "view == story-entries && viewItem == version-item",
                     "group": "inline"
                 },

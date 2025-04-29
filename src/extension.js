@@ -60,6 +60,7 @@ async function activate(context) {
   context.subscriptions.push(vscode.commands.registerCommand('babel.openVersion', (storyId, version) => workspace.openVersionCommand(storyId, version)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.editVersionName', (node) => workspace.editVersionNameCommand(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.exportToTemplate', (node) => workspace.exportToTemplate(node)));
+  context.subscriptions.push(vscode.commands.registerCommand('babel.sendToKindle', (node) => workspace.sendToKindle(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.editStoryTitle', (node) => workspace.editStoryTitle(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeVersion', (node) => workspace.removeVersion(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeStory', (node) => workspace.removeStory(node)));

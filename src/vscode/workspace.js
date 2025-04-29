@@ -12,6 +12,8 @@ const { ActivityChartViewProvider } = require('./activity-view');
 const { StoryDataProvider, VersionInfoProvider, BackupHistoryProvider } = require('./story-view-data-provider');
 const Errors = require('../errors');
 
+let decorationTypes = [];
+
 // word regex, compiling first
 const RE_WORD = new RegExp('\\w+', 'g');
 
@@ -289,6 +291,10 @@ class WorkspaceManager {
     }
   }
 
+  async sendToKindle(versionNode) {
+    
+  }
+
   /**
    * 
    * @param {VersionItem} versionNode 
@@ -550,11 +556,16 @@ class WorkspaceManager {
       this.loadInfoForVersion(storyVersionObj);
     }
 
-    const textEditor = vscode.window.visibleTextEditors.find(
-      editor => editor.document.uri.toString() === documentWillSaveEvent.document.uri.toString()
-    );
+    const textEditor = vscode.window.activeTextEditor;
     const characters = this.getCharactersFromMetadata(textEditor);
-    this.highlightCharacters(textEditor, characters);
+
+    if (decorationTypes.length > 0) {
+      decorationTypes.forEach(decorationType => decorationType.dispose());
+    }
+
+    if (characters && characters.length > 0) {
+      this.highlightCharacters(textEditor, characters);
+    }
   }
 
   /**
@@ -643,6 +654,10 @@ class WorkspaceManager {
       const { metadata, content } = parseMD(textEditor.document.getText());
       const characters = metadata.characters ? metadata.characters : '';
 
+      if (characters.length === 0) {
+        return [];
+      }
+
       return characters.split(',').map(character => character.trim());
     } catch (e) {
       vscode.window.showErrorMessage('There was an error trying to read the header contents.');
@@ -667,6 +682,7 @@ class WorkspaceManager {
         const decorationType = vscode.window.createTextEditorDecorationType({
             backgroundColor: color,
         });
+        decorationTypes.push(decorationType);
 
         textEditor.setDecorations(decorationType, decorationsArray);
     });
