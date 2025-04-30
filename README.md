@@ -66,6 +66,23 @@ To enable Google Drive integration, you have to set the `stories.backup.cloudBac
 Added a new view that displays how many words were written on each day, and for which stories. Using the new [Webview API](https://code.visualstudio.com/api/extension-guides/webview) and also the awesome [Calendar heatmap graph](https://github.com/g1eb/calendar-heatmap) library. Below is an example for this view.
 
 ![](images/img2.png)
+
+### Markdown metadata
+
+You can insert Markdown metadata as a header on the top of each version file to use its values instead of the provided in settings. If a field used by the template is missing or its value is empty, then we try to get the value from settings.
+
+To insert the header in a version file, right-click on the editor and click the option `Insert header`. You will be provided with a list of the available templates. The header will be generated based on the fields required by this template.
+
+### Send to Kindle
+
+Send stories to your Kindle device. Requires setting up email addresses. Read [this guide](https://www.amazon.co.uk/sendtokindle/email) on how to do this. Then set the appropriate settings variables defined below.
+
+## Upcoming features
+
+- Linguistic analysis of texts.
+- Integration with [The Grinder](https://thegrinder.diabolicalplots.com/).
+
+
 ## Settings
 
 - `stories.workspace.removeFiles`: if set, the extension will also remove files when removing a story or a version from the workspace. Set with care.
@@ -74,18 +91,12 @@ Added a new view that displays how many words were written on each day, and for 
 - `stories.authorInformation.penName`: author's pen name.
 - `stories.authorInformation.email`: author's e-mail.
 - `stories.authorInformation.country`: author's country.
-- `stories.backup.period`: period between backup operations.
-- `stories.backup.cloudBackup.googleDrive`: allow Google Drive integration.
-- `stories.backup.localBackup.path`: local path to store backup files.
-
-### Markdown metadata
-
-You can insert Markdown metadata as a header on the top of each version file to use its values instead of the provided in settings. If a field used by the template is missing or its value is empty, then we try to get the value from settings.
-
-To insert the header in a version file, right-click on the editor and click the option `Insert header`. You will be provided with a list of the available templates. The header will be generated based on the fields required by this template.
-
-## Upcoming features
-
-- Integration with OneDrive and Dropbox to backup stories.
-- Linguistic analysis of texts.
-- Integration with [The Grinder](https://thegrinder.diabolicalplots.com/).
+- `backup.period`: period between backup operations.
+- `backup.cloudBackup.googleDrive`: allow Google Drive integration.
+- `backup.localBackup.path`: local path to store backup files.
+- `exporter.pandoc-templates`: local path to pandoc-templates repo.
+- `kindle.emailService`: email service provider to use when sending documents to your Kindle device. Currently, only Gmail and Yahoo are supported.
+- `kindle.recipientEmail`: registered mail address that will receive the file.
+- `kindle.senderEmail`: registered email address to send documents to your Kindle device.
+- `kindle.senderPassword`: password of the registered email address to send documents to your Kindle device.
+- `kindle.exportFormat`: export format to be used when sending documents to your Kindle device. Currently, only EPUB and DOCX are supported.

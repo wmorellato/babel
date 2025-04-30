@@ -36,9 +36,9 @@ function isHardDeleteSet() {
 }
 
 function getBackupOptions() {
-  const localBackupPath = vscode.workspace.getConfiguration('stories.backup.localBackup').get('path');
-  const backupPeriod = vscode.workspace.getConfiguration('stories.backup').get('period').toLowerCase();
-  const isDriveEnabled = vscode.workspace.getConfiguration('stories.backup.cloudBackup').get('googleDrive');
+  const localBackupPath = vscode.workspace.getConfiguration('backup.localBackup').get('path');
+  const backupPeriod = vscode.workspace.getConfiguration('backup').get('period').toLowerCase();
+  const isDriveEnabled = vscode.workspace.getConfiguration('backup.cloudBackup').get('googleDrive');
   
   const options = {
     providers: {
@@ -75,10 +75,43 @@ function getBackupOptions() {
   return options;
 }
 
+function getPandocTemplatesLocation() {
+  const pandocTemplatesLocation = vscode.workspace.getConfiguration('exporter').get('pandoc-templates');
+  if (pandocTemplatesLocation && pandocTemplatesLocation !== 'null') {
+    return pandocTemplatesLocation;
+  }
+
+  throw new Error('Local pandoc-templates location is not set in settings.');
+}
+
+function getKindleOptions() {
+  const emailService = vscode.workspace.getConfiguration('kindle').get('emailService');
+  const recEmailAddress = vscode.workspace.getConfiguration('kindle').get('recipientEmail');
+  const emailAddress = vscode.workspace.getConfiguration('kindle').get('senderEmail');
+  const emailPassword = vscode.workspace.getConfiguration('kindle').get('senderPassword');
+  const exportFormat = vscode.workspace.getConfiguration('kindle').get('exportFormat');
+
+  if (!recEmailAddress || !emailAddress || !emailPassword) {
+    throw new Error('Kindle email settings are not properly configured.');
+  }
+
+  return {
+    recipientEmail: recEmailAddress,
+    service: emailService,
+    auth: {
+      user: emailAddress,
+      pass: emailPassword,
+    },
+    exportFormat: exportFormat,
+  };
+}
+
 module.exports = {
   getWorkspaceDir,
   setWorkspaceDir,
   isHardDeleteSet,
   getAuthorInfo,
   getBackupOptions,
+  getPandocTemplatesLocation,
+  getKindleOptions,
 };

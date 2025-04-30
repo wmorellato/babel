@@ -1,3 +1,4 @@
+const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
@@ -5,7 +6,9 @@ const vscode = require('vscode');
 const parseMD = require('parse-md').default;
 const utils = require('../utils');
 const settings = require('../settings');
+const nodemailer = require('nodemailer');
 const { Exporter } = require('../exporter');
+const { convertFileWithPandocTemplates } = require('../exporter/pandoc-templates-util');
 const { Manager, Version } = require('../manager');
 const { ActivityManager } = require('./activity-manager');
 const { ActivityChartViewProvider } = require('./activity-view');
@@ -292,7 +295,43 @@ class WorkspaceManager {
   }
 
   async sendToKindle(versionNode) {
-    
+    const versionPath = this.manager.getVersionPath(versionNode.simpleStoryObj.id, versionNode.version.name);
+    const tmpDir = os.tmpdir();
+    const normTitle = utils.titleToFilename(versionNode.simpleStoryObj.title);
+    const kindleOptions = settings.getKindleOptions();
+    const outputFilePath = path.join(tmpDir, `${normTitle}.${kindleOptions.exportFormat}`);
+    const contentType = kindleOptions.exportFormat === 'epub' ? 'application/epub+zip' : 'application/docx';
+
+    try {
+      const transporter = nodemailer.createTransport({
+        service: kindleOptions.service,
+        auth: kindleOptions.auth
+      });
+
+      settings.getPandocTemplatesLocation();
+      await convertFileWithPandocTemplates(versionPath, {
+        outputFile: outputFilePath
+      });
+
+      const info = await transporter.sendMail({
+        from: kindleOptions.auth.user,
+        to: kindleOptions.recipientEmail,
+        subject: versionNode.simpleStoryObj.title,
+        text: 'Story sent from Babel',
+        attachments: [
+          {
+            filename: `${normTitle}.${kindleOptions.exportFormat}`,
+            path: outputFilePath,
+            contentType: contentType,
+          }
+        ]
+      });
+
+      vscode.window.showInformationMessage('Your story was sent. Check your Kindle device.');
+    } catch (e) {
+      console.error(e);
+      vscode.window.showErrorMessage(`Error converting your story to epub. ${e.message}`);
+    }
   }
 
   /**

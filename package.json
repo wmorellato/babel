@@ -198,7 +198,7 @@
             ]
         },
         "configuration": {
-            "title": "Stories",
+            "title": "Babel",
             "properties": {
                 "stories.workspace.removeFiles": {
                     "type": "boolean",
@@ -226,7 +226,7 @@
                     "type": "string",
                     "description": "The country where you live. Feel free to fill this information directly on the exported file later."
                 },
-                "stories.backup.period": {
+                "backup.period": {
                     "type": "string",
                     "default": "Weekly",
                     "enum": [
@@ -236,17 +236,46 @@
                     ],
                     "description": "Period of backup operations. Backup is triggered on VSCode startup."
                 },
-                "stories.backup.cloudBackup.googleDrive": {
+                "backup.cloudBackup.googleDrive": {
                     "type": "boolean",
                     "description": "Enables backup of Babel workspace using Google Drive. Upon enabling this options, you have to restart VSCode to trigger Google Drive setup."
                 },
-                "stories.backup.localBackup.path": {
-                    "type": [
-                        "string",
-                        "null"
-                    ],
-                    "default": "null",
+                "backup.localBackup.path": {
+                    "type": "string",
+                    "default": "...\\Documents\\Babel",
                     "description": "Path in local computer to store Babel backups. Defaults to Documents folder."
+                },
+                "exporter.pandoc-templates": {
+                    "type": "string",
+                    "default": "...\\repos\\pandoc-templates",
+                    "description": "Path to pandoc-templates local copy."
+                },
+                "kindle.emailService": {
+                    "type": "string",
+                    "enum": ["gmail", "yahoo"],
+                    "default": "gmail",
+                    "description": "Email service provider to use when sending documents to your Kindle device. Currently, only Gmail and Yahoo are supported."
+                },
+                "kindle.recipientEmail": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Registered mail address that will receive the file."
+                },
+                "kindle.senderEmail": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Registered email address to send documents to your Kindle device."
+                },
+                "kindle.senderPassword": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Password of the registered email address to send documents to your Kindle device."
+                },
+                "kindle.exportFormat": {
+                    "type": "string",
+                    "enum": ["epub", "docx"],
+                    "default": "epub",
+                    "description": "Export format to be used when sending documents to your Kindle device. Currently, only EPUB and DOCX are supported."
                 }
             }
         }
@@ -289,6 +318,7 @@
         "lodash-id": "^0.14.0",
         "lowdb": "^1.0.0",
         "moment": "^2.29.4",
+        "nodemailer": "^6.10.1",
         "open": "^7.4.2",
         "parse-md": "^2.0.4",
         "rimraf": "^3.0.2",
