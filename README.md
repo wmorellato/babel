@@ -75,13 +75,9 @@ To insert the header in a version file, right-click on the editor and click the 
 
 ### Send to Kindle
 
-Send stories to your Kindle device. Requires setting up email addresses. Read [this guide](https://www.amazon.co.uk/sendtokindle/email) on how to do this. Then set the appropriate settings variables defined below.
+Send stories to your Kindle device. Requires setting up email addresses. [Read this guide](https://www.amazon.co.uk/sendtokindle/email) on how to do this. Then set the appropriate settings variables defined below.
 
-## Upcoming features
-
-- Linguistic analysis of texts.
-- Integration with [The Grinder](https://thegrinder.diabolicalplots.com/).
-
+Bear in mind that sending documents by email is quite unreliable, and it may not arrive, but it has worked for me so far.
 
 ## Settings
 
