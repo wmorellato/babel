@@ -3,7 +3,7 @@
     "displayName": "Babel",
     "publisher": "wmorellato",
     "description": "An extension for writers to create and manage stories using VSCode.",
-    "version": "1.9.0",
+    "version": "1.11.0",
     "license": "SEE LICENSE IN LICENSE.md",
     "keywords": [
         "writing",
@@ -30,7 +30,7 @@
         "onView:story-entries",
         "workspaceContains:babel.json"
     ],
-    "main": "src/extension.js",
+    "main": "dist/babel.js",
     "contributes": {
         "commands": [
             {
