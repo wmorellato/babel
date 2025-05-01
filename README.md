@@ -77,6 +77,8 @@ To insert the header in a version file, right-click on the editor and click the 
 
 Send stories to your Kindle device. Requires setting up email addresses. [Read this guide](https://www.amazon.co.uk/sendtokindle/email) on how to do this. Then set the appropriate settings variables defined below.
 
+Also it requires [pandoc-templates](https://github.com/prosegrinder/pandoc-templates) to generate the file in Shunn's format. Clone the repo in your local machine and set the path in the `exporter.pandoc-templates` setting on vscode.
+
 Bear in mind that sending documents by email is quite unreliable, and it may not arrive, but it has worked for me so far.
 
 ## Settings
