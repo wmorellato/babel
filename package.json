@@ -28,7 +28,8 @@
     },
     "activationEvents": [
         "onView:story-entries",
-        "workspaceContains:babel.json"
+        "workspaceContains:babel.json",
+        "onLanguage:markdown"
     ],
     "main": "dist/babel.js",
     "contributes": {
@@ -103,6 +104,24 @@
                 "command": "babel.insertMetadata",
                 "category": "Explorer",
                 "title": "Insert header"
+            },
+            {
+                "command": "babel.addComment",
+                "icon": "$(comment-add)",
+                "category": "Comments",
+                "title": "Add Comment"
+            },
+            {
+                "command": "babel.editComment",
+                "icon": "$(edit)",
+                "category": "Comments",
+                "title": "Edit Comment"
+            },
+            {
+                "command": "babel.deleteComment",
+                "icon": "$(trash)",
+                "category": "Comments",
+                "title": "Delete Comment"
             }
         ],
         "viewsContainers": {
@@ -194,9 +213,32 @@
                 {
                     "command": "babel.insertMetadata",
                     "when": "versionIsOpen"
+                },
+                {
+                    "command": "babel.addComment",
+                    "when": "editorLangId == markdown && editorHasSelection",
+                    "group": "comments@1"
+                },
+                {
+                    "command": "babel.editComment",
+                    "when": "editorLangId == markdown",
+                    "group": "comments@2"
+                },
+                {
+                    "command": "babel.deleteComment",
+                    "when": "editorLangId == markdown",
+                    "group": "comments@3"
                 }
             ]
         },
+        "keybindings": [
+            {
+                "command": "babel.addComment",
+                "key": "ctrl+shift+m",
+                "mac": "cmd+shift+m",
+                "when": "editorLangId == markdown && editorHasSelection"
+            }
+        ],
         "configuration": {
             "title": "Babel",
             "properties": {
