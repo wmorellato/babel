@@ -24,7 +24,14 @@ const { execSync } = require('child_process');
 // Import from parent directory
 const gitUtils = require('../src/git-utils');
 const { BabelDb } = require('../src/database');
-const utils = require('../src/utils');
+
+// Utility function (standalone version to avoid vscode dependency)
+function normalizeFilename(filename) {
+  if (typeof filename !== 'string') {
+    throw new Error('Not a valid path');
+  }
+  return filename.toLowerCase().replace(/\s/g, '_');
+}
 
 const VersioningMode = {
   GIT: 'git',
@@ -162,7 +169,7 @@ class MigrationScript {
     if (this.dryRun) {
       this.log('Would initialize git repository', 'info');
       versions.forEach(version => {
-        const normalizedName = utils.normalizeFilename(version.name);
+        const normalizedName = normalizeFilename(version.name);
         this.log(`  Would create branch: ${normalizedName}`, 'info');
       });
       this.stats.migratedStories++;
@@ -173,7 +180,7 @@ class MigrationScript {
     try {
       // Initialize git repository with the first version's branch
       const firstVersion = versions[0];
-      const firstBranch = utils.normalizeFilename(firstVersion.name);
+      const firstBranch = normalizeFilename(firstVersion.name);
 
       this.log(`Initializing git repository with branch: ${firstBranch}`, 'info');
       gitUtils.initGitRepo(storyDir, firstBranch);
@@ -212,7 +219,7 @@ class MigrationScript {
    * Migrate a single version to a git branch
    */
   async migrateVersion(storyId, storyDir, version, isFirst = false) {
-    const normalizedName = utils.normalizeFilename(version.name);
+    const normalizedName = normalizeFilename(version.name);
     const versionFile = path.join(storyDir, normalizedName + '.md');
 
     this.log(`  Migrating version: ${version.name} -> branch: ${normalizedName}`, 'info');
