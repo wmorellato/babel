@@ -25,7 +25,6 @@ class CommentProvider {
             borderRadius: '3px',
             cursor: 'pointer',
             after: {
-                contentText: '💬',
                 margin: '0 0 0 4px'
             }
         });
@@ -105,8 +104,7 @@ class CommentProvider {
             const range = new vscode.Range(startPos, endPos);
 
             decorations.push({
-                range,
-                hoverMessage: `Comment [${ref.tag}] - Click to edit or delete`
+                range
             });
         }
 
@@ -131,27 +129,28 @@ class CommentProvider {
         const markdown = new vscode.MarkdownString();
         markdown.isTrusted = true;
         markdown.supportHtml = true;
-
-        // Create hover content with comment text and action buttons
-        markdown.appendMarkdown(`**Comment [${comment.tag}]**\n\n`);
+        markdown.supportThemeIcons = true;
 
         if (comment.originalText) {
-            markdown.appendMarkdown(`*"${comment.originalText}"*\n\n`);
+            // originalText in a smooth accent color and italic
+            markdown.appendMarkdown(
+            `"${comment.originalText}"\n\n`
+            );
         }
 
+        // Comment text (inherits container font size)
         markdown.appendMarkdown(`${comment.text}\n\n`);
-        markdown.appendMarkdown(`---\n\n`);
 
-        // Add action links
+        // Add action links; style icons with default gray color
         const editCommand = encodeURIComponent(JSON.stringify([comment.tag, comment.text]));
         const deleteCommand = encodeURIComponent(JSON.stringify([comment.tag]));
 
         markdown.appendMarkdown(
-            `[✏️ Edit](command:babel.editComment?${editCommand} "Edit comment") | ` +
-            `[🗑️ Delete](command:babel.deleteComment?${deleteCommand} "Delete comment")`
+            `[$(edit)](command:babel.editComment?${editCommand} "Edit comment") | ` +
+            `[$(remove)](command:babel.deleteComment?${deleteCommand} "Delete comment")`
         );
 
-        return new vscode.Hover(markdown);
+        return new vscode.Hover(markdown, new vscode.Range(position, position));
     }
 
     /**
