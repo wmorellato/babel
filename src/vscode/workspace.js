@@ -9,11 +9,12 @@ const settings = require('../settings');
 const nodemailer = require('nodemailer');
 const { Exporter } = require('../exporter');
 const { convertFileWithPandocTemplates } = require('../exporter/pandoc-templates-util');
-const { Manager, Version } = require('../manager');
+const { Manager, Version, VersioningMode } = require('../manager');
 const { ActivityManager } = require('./activity-manager');
 const { ActivityChartViewProvider } = require('./activity-view');
 const { StoryDataProvider, VersionInfoProvider, BackupHistoryProvider } = require('./story-view-data-provider');
 const Errors = require('../errors');
+const gitUtils = require('../git-utils');
 
 let decorationTypes = [];
 
@@ -252,12 +253,23 @@ class WorkspaceManager {
    * @param {Object} versionObj version object
    */
   openVersionCommand(simpleStoryObj, versionObj) {
+    // Check if this is a git-based story and checkout the branch if needed
+    if (simpleStoryObj.versioningMode === VersioningMode.GIT && versionObj.branch) {
+      const storyDir = path.join(this.manager.workspaceDirectory, simpleStoryObj.id);
+      const currentBranch = gitUtils.getCurrentBranch(storyDir);
+
+      // Only checkout if we're not already on the target branch
+      if (currentBranch !== versionObj.branch) {
+        gitUtils.checkoutBranch(storyDir, versionObj.branch);
+      }
+    }
+
     const versionPath = this.manager.getVersionPath(simpleStoryObj.id, versionObj.name);
 
     return vscode.workspace.openTextDocument(versionPath).then((textDocument) => {
       this.updateVersionInfoData(simpleStoryObj, versionObj);
       this.activityManager.initDocument(versionObj);
-      
+
       return vscode.window.showTextDocument(textDocument);
     });
   }
@@ -295,6 +307,16 @@ class WorkspaceManager {
   }
 
   async sendToKindle(versionNode) {
+    // Checkout the branch if it's a git-based story
+    if (versionNode.simpleStoryObj.versioningMode === VersioningMode.GIT && versionNode.version.branch) {
+      const storyDir = path.join(this.manager.workspaceDirectory, versionNode.simpleStoryObj.id);
+      const currentBranch = gitUtils.getCurrentBranch(storyDir);
+
+      if (currentBranch !== versionNode.version.branch) {
+        gitUtils.checkoutBranch(storyDir, versionNode.version.branch);
+      }
+    }
+
     const versionPath = this.manager.getVersionPath(versionNode.simpleStoryObj.id, versionNode.version.name);
     const tmpDir = os.tmpdir();
     const normTitle = utils.titleToFilename(versionNode.simpleStoryObj.title);
@@ -570,7 +592,7 @@ class WorkspaceManager {
 
   /**
    * Flush the modifications into the version object in the database.
-   * @param {TextDocumentWillSaveEvent} documentWillSaveEvent the event fired by vscode 
+   * @param {TextDocumentWillSaveEvent} documentWillSaveEvent the event fired by vscode
    */
   onWillSaveDocument(documentWillSaveEvent) {
     if (!this.manager.isStory(documentWillSaveEvent.document.fileName)) {
@@ -586,6 +608,12 @@ class WorkspaceManager {
     storyVersionObj.version.wordCount = visibleVersion.wordCount; // same syncing problem
 
     this.manager.updateVersionInfo(visibleVersion);
+
+    // Auto-commit for git-based stories
+    if (storyVersionObj.story.versioningMode === VersioningMode.GIT) {
+      const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+      gitUtils.commit(storyDir, 'Auto-save');
+    }
 
     if (![Version.REVISION, Version.TRANSLATION].includes(visibleVersion.name)) {
       this.activityManager.saveStoryActivity(visibleVersion);
