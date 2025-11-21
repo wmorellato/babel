@@ -1,6 +1,6 @@
 # Cleanup Script for Dangling Entries
 
-This script removes orphaned stories and versions from `babel.json` that no longer have corresponding files or directories on disk.
+This script removes orphaned stories, versions, and activity entries from `babel.json` that no longer have corresponding files or directories on disk.
 
 ## When to Use This Script
 
@@ -18,6 +18,7 @@ The script scans your workspace and removes:
 2. **Dangling Versions**: Versions that exist in `babel.json` but don't have:
    - A `.md` file (for file-based stories), or
    - A git branch (for git-based stories)
+3. **Dangling Activity Entries**: Activity log entries that reference stories that no longer exist
 
 ## Usage
 
@@ -65,6 +66,8 @@ node scripts/cleanup-dangling.js ~/Documents/babel-workspace
 - Uses the same database methods as the extension (`deleteStory`, `deleteVersion`)
 - Properly removes versions from story's `versions` array
 - Properly removes all versions when a story is deleted
+- Removes activity entries that reference deleted stories
+- If all activity entries for a day are removed, the entire day entry is deleted
 - Changes are written to `babel.json` immediately
 
 ## Output
@@ -93,7 +96,10 @@ Mode: LIVE
 🔍 Found dangling story: "Old Story" (ID: abc123)
   🔍 Found dangling version: "draft 2" in story "My Story"
 
-⚠️  Found 1 dangling stories and 1 dangling versions
+📝 Scanning activity entries for dangling references...
+  🔍 Found dangling activity entry for non-existent story: xyz789 on 2024-01-10
+
+⚠️  Found 1 dangling stories, 1 dangling versions, and 1 dangling activity entries
 
 ⚠️  WARNING: This will permanently remove entries from babel.json.
 Press Ctrl+C to cancel, or wait 5 seconds to continue...
@@ -104,16 +110,22 @@ Press Ctrl+C to cancel, or wait 5 seconds to continue...
 📝 Removing 1 dangling versions...
   ✅ Removed version: "draft 2" from story "My Story"
 
+📝 Removing 1 dangling activity entries...
+  ✅ Removed 1 activity entries from 2024-01-10
+
 ============================================================
 CLEANUP SUMMARY
 ============================================================
-Total stories checked:       10
-Dangling stories found:      1
-Total versions checked:      25
-Dangling versions found:     1
+Total stories checked:           10
+Dangling stories found:          1
+Total versions checked:          25
+Dangling versions found:         1
+Total activity entries checked:  50
+Dangling activity entries found: 1
 
-Stories removed:             1
-Versions removed:            1
+Stories removed:                 1
+Versions removed:                1
+Activity entries removed:        1
 
 ✅ Cleanup completed successfully!
 ============================================================

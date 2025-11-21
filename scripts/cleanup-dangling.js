@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * Cleanup script to remove dangling stories and versions from babel.json
+ * Cleanup script to remove dangling stories, versions, and activity entries from babel.json
  *
  * This script finds and removes:
  * - Stories that exist in babel.json but don't have a directory on disk
  * - Versions that exist in babel.json but don't have a corresponding file or git branch
+ * - Activity entries that reference non-existent stories
  *
  * Usage:
  *   node scripts/cleanup-dangling.js [workspace-path] [options]
@@ -50,8 +51,11 @@ class CleanupScript {
       danglingStories: 0,
       totalVersions: 0,
       danglingVersions: 0,
+      totalActivityEntries: 0,
+      danglingActivityEntries: 0,
       removedStories: [],
       removedVersions: [],
+      removedActivityEntries: [],
     };
   }
 
@@ -196,6 +200,93 @@ class CleanupScript {
   }
 
   /**
+   * Find activity entries that reference non-existent stories
+   */
+  findDanglingActivityEntries(validStoryIds) {
+    this.log('\nScanning activity entries for dangling references...', 'info');
+
+    const activityHistory = this.db.getActivityHistory();
+    const danglingActivityEntries = [];
+
+    for (const dayActivity of activityHistory) {
+      if (!dayActivity.entries || !Array.isArray(dayActivity.entries)) {
+        continue;
+      }
+
+      this.stats.totalActivityEntries += dayActivity.entries.length;
+
+      for (const entry of dayActivity.entries) {
+        if (!validStoryIds.has(entry.storyId)) {
+          this.log(`  Found dangling activity entry for non-existent story: ${entry.storyId} on ${dayActivity.date}`, 'found');
+          danglingActivityEntries.push({
+            date: dayActivity.date,
+            entry: entry,
+            dayActivity: dayActivity,
+          });
+          this.stats.danglingActivityEntries++;
+        }
+      }
+    }
+
+    return danglingActivityEntries;
+  }
+
+  /**
+   * Remove dangling activity entries from database
+   */
+  removeDanglingActivityEntries(activityEntries) {
+    if (activityEntries.length === 0) {
+      return;
+    }
+
+    this.log(`\n${this.dryRun ? 'Would remove' : 'Removing'} ${activityEntries.length} dangling activity entries...`, 'info');
+
+    // Group by date for efficient removal
+    const entriesByDate = new Map();
+    for (const { date, entry, dayActivity } of activityEntries) {
+      if (!entriesByDate.has(date)) {
+        entriesByDate.set(date, { dayActivity, entriesToRemove: [] });
+      }
+      entriesByDate.get(date).entriesToRemove.push(entry);
+    }
+
+    // Remove entries for each date
+    for (const [date, { dayActivity, entriesToRemove }] of entriesByDate) {
+      if (this.dryRun) {
+        this.log(`  Would remove ${entriesToRemove.length} activity entries from ${date}`, 'info');
+      } else {
+        try {
+          // Filter out the dangling entries
+          const updatedEntries = dayActivity.entries.filter(
+            entry => !entriesToRemove.some(removeEntry => removeEntry.storyId === entry.storyId)
+          );
+
+          if (updatedEntries.length === 0) {
+            // Remove the entire day entry if no entries remain
+            this.db.db
+              .get('activity')
+              .remove({ date: date })
+              .write();
+            this.log(`  Removed all activity entries for ${date} (day removed)`, 'success');
+          } else {
+            // Update with filtered entries
+            this.db.db
+              .get('activity')
+              .find({ date: date })
+              .assign({ entries: updatedEntries })
+              .write();
+            this.log(`  Removed ${entriesToRemove.length} activity entries from ${date}`, 'success');
+          }
+
+          this.stats.removedActivityEntries.push(...entriesToRemove);
+        } catch (error) {
+          this.log(`  Failed to remove activity entries from ${date}: ${error.message}`, 'error');
+        }
+      }
+    }
+  }
+
+  /**
    * Remove dangling versions from database
    */
   removeDanglingVersions(versions) {
@@ -227,17 +318,21 @@ class CleanupScript {
     console.log('\n' + '='.repeat(60));
     console.log('CLEANUP SUMMARY');
     console.log('='.repeat(60));
-    console.log(`Total stories checked:       ${this.stats.totalStories}`);
-    console.log(`Dangling stories found:      ${this.stats.danglingStories}`);
-    console.log(`Total versions checked:      ${this.stats.totalVersions}`);
-    console.log(`Dangling versions found:     ${this.stats.danglingVersions}`);
+    console.log(`Total stories checked:           ${this.stats.totalStories}`);
+    console.log(`Dangling stories found:          ${this.stats.danglingStories}`);
+    console.log(`Total versions checked:          ${this.stats.totalVersions}`);
+    console.log(`Dangling versions found:         ${this.stats.danglingVersions}`);
+    console.log(`Total activity entries checked:  ${this.stats.totalActivityEntries}`);
+    console.log(`Dangling activity entries found: ${this.stats.danglingActivityEntries}`);
 
     if (!this.dryRun) {
-      console.log(`\nStories removed:             ${this.stats.removedStories.length}`);
-      console.log(`Versions removed:            ${this.stats.removedVersions.length}`);
+      console.log(`\nStories removed:                 ${this.stats.removedStories.length}`);
+      console.log(`Versions removed:                ${this.stats.removedVersions.length}`);
+      console.log(`Activity entries removed:        ${this.stats.removedActivityEntries.length}`);
     }
 
-    if (this.stats.danglingStories === 0 && this.stats.danglingVersions === 0) {
+    const totalDangling = this.stats.danglingStories + this.stats.danglingVersions + this.stats.danglingActivityEntries;
+    if (totalDangling === 0) {
       console.log('\n✨ Database is clean! No dangling entries found.');
     } else if (this.dryRun) {
       console.log('\n⚠️  This was a dry run. Run without --dry-run to remove dangling entries.');
@@ -272,17 +367,31 @@ class CleanupScript {
     // Find dangling entries
     const { danglingStories, danglingVersions } = this.findDanglingEntries();
 
-    if (danglingStories.length === 0 && danglingVersions.length === 0) {
+    // Build set of valid story IDs (stories that exist on disk)
+    const allStories = this.db.getAllStories();
+    const validStoryIds = new Set();
+    for (const story of allStories) {
+      if (!danglingStories.find(ds => ds.id === story.id)) {
+        validStoryIds.add(story.id);
+      }
+    }
+
+    // Find dangling activity entries
+    const danglingActivityEntries = this.findDanglingActivityEntries(validStoryIds);
+
+    const totalDangling = danglingStories.length + danglingVersions.length + danglingActivityEntries.length;
+
+    if (totalDangling === 0) {
       this.log('\n✨ No dangling entries found! Database is clean.', 'success');
       this.printStats();
       return;
     }
 
     // Show what was found
-    this.log(`\nFound ${danglingStories.length} dangling stories and ${danglingVersions.length} dangling versions`, 'warning');
+    this.log(`\nFound ${danglingStories.length} dangling stories, ${danglingVersions.length} dangling versions, and ${danglingActivityEntries.length} dangling activity entries`, 'warning');
 
     // Confirm before proceeding (unless dry run)
-    if (!this.dryRun && (danglingStories.length > 0 || danglingVersions.length > 0)) {
+    if (!this.dryRun && totalDangling > 0) {
       console.log('\n⚠️  WARNING: This will permanently remove entries from babel.json.');
       console.log('Press Ctrl+C to cancel, or wait 5 seconds to continue...\n');
       await new Promise(resolve => setTimeout(resolve, 5000));
@@ -291,6 +400,7 @@ class CleanupScript {
     // Remove dangling entries
     this.removeDanglingStories(danglingStories);
     this.removeDanglingVersions(danglingVersions);
+    this.removeDanglingActivityEntries(danglingActivityEntries);
 
     // Print statistics
     this.printStats();
@@ -338,8 +448,8 @@ function printHelp() {
   console.log(`
 Dangling Entries Cleanup Script
 
-This script removes stories and versions from babel.json that don't have
-corresponding files or directories on disk.
+This script removes stories, versions, and activity entries from babel.json
+that don't have corresponding files or directories on disk.
 
 Usage:
   node scripts/cleanup-dangling.js [workspace-path] [options]
@@ -366,6 +476,7 @@ What gets removed:
   - Stories that exist in babel.json but don't have a directory on disk
   - Versions that exist in babel.json but don't have a file or git branch
   - All versions of stories that no longer exist
+  - Activity entries that reference non-existent stories
 
 Note:
   It's recommended to use --backup for safety, especially if you're not
