@@ -11,7 +11,7 @@
         "book"
     ],
     "engines": {
-        "vscode": "^1.63.0"
+        "vscode": "^1.95.0"
     },
     "icon": "resources/logo-icon.png",
     "galleryBanner": {
@@ -31,7 +31,7 @@
         "workspaceContains:babel.json",
         "onLanguage:markdown"
     ],
-    "main": "dist/babel.js",
+    "main": "src/extension.js",
     "contributes": {
         "commands": [
             {
