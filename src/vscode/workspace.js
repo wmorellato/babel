@@ -158,7 +158,7 @@ class WorkspaceManager {
     const backupOptions = settings.getBackupOptions();
     this.manager.initBackupManager(backupOptions)
       .then(() => {
-        vscode.window.showInformationMessage('Backup manager running.');
+        vscode.window.showInformationMessage('Workspace backed up.');
       }).catch((e) => {
         vscode.window.showErrorMessage(`Unable to start backup manager. Error: ${e}`, {
           modal: true,
