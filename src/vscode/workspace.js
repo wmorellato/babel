@@ -260,6 +260,30 @@ class WorkspaceManager {
 
       // Only checkout if we're not already on the target branch
       if (currentBranch !== versionObj.branch) {
+        // Commit any staged changes on the current branch before switching
+        const wordStats = gitUtils.getStagedWordCount(storyDir);
+
+        if (wordStats.netWords !== 0 || wordStats.wordsAdded > 0 || wordStats.wordsDeleted > 0) {
+          let commitMessage = 'Auto-save on version switch';
+          if (wordStats.netWords !== 0) {
+            if (wordStats.wordsDeleted === 0) {
+              commitMessage = `Auto-save on version switch: +${wordStats.wordsAdded} words`;
+            } else if (wordStats.wordsAdded === 0) {
+              commitMessage = `Auto-save on version switch: -${wordStats.wordsDeleted} words`;
+            } else {
+              commitMessage = `Auto-save on version switch: +${wordStats.wordsAdded}/-${wordStats.wordsDeleted} words (net: ${wordStats.netWords >= 0 ? '+' : ''}${wordStats.netWords})`;
+            }
+          }
+
+          gitUtils.commitStaged(storyDir, commitMessage);
+
+          // Track net words for activity
+          // Note: we need to find the current version's name to check if it's revision/translation
+          // For now, we'll track it since we're switching branches anyway
+          this.activityManager.trackGitWords(simpleStoryObj.id, wordStats.netWords);
+        }
+
+        // Now checkout the new branch
         gitUtils.checkoutBranch(storyDir, versionObj.branch);
       }
     }
@@ -587,6 +611,36 @@ class WorkspaceManager {
     }
 
     const storyVersionObj = this.manager.loadVersionFromPath(textDocument.fileName);
+
+    // Commit any staged changes for git-based stories before closing
+    if (storyVersionObj.story.versioningMode === VersioningMode.GIT) {
+      const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+
+      // Get word count stats for commit message
+      const wordStats = gitUtils.getStagedWordCount(storyDir);
+
+      // Commit any remaining staged changes
+      if (wordStats.netWords !== 0 || wordStats.wordsAdded > 0 || wordStats.wordsDeleted > 0) {
+        let commitMessage = 'Auto-save on close';
+        if (wordStats.netWords !== 0) {
+          if (wordStats.wordsDeleted === 0) {
+            commitMessage = `Auto-save on close: +${wordStats.wordsAdded} words`;
+          } else if (wordStats.wordsAdded === 0) {
+            commitMessage = `Auto-save on close: -${wordStats.wordsDeleted} words`;
+          } else {
+            commitMessage = `Auto-save on close: +${wordStats.wordsAdded}/-${wordStats.wordsDeleted} words (net: ${wordStats.netWords >= 0 ? '+' : ''}${wordStats.netWords})`;
+          }
+        }
+
+        gitUtils.commitStaged(storyDir, commitMessage);
+
+        // Track net words for activity
+        if (![Version.REVISION, Version.TRANSLATION].includes(storyVersionObj.version.name)) {
+          this.activityManager.trackGitWords(storyVersionObj.story.id, wordStats.netWords);
+        }
+      }
+    }
+
     delete this.visibleVersions[storyVersionObj.version.id];
   }
 
