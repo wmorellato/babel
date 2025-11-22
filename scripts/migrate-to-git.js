@@ -30,7 +30,7 @@ function normalizeFilename(filename) {
   if (typeof filename !== 'string') {
     throw new Error('Not a valid path');
   }
-  return filename.toLowerCase().replace(/\s/g, '_');
+  return filename.toLowerCase().replace(/\s/g, '_').replace(/:/g, '-');
 }
 
 const VersioningMode = {
