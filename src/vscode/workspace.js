@@ -148,6 +148,10 @@ class WorkspaceManager {
     const settingsManager = new SettingsManager(this.workspaceDirectory);
     settingsManager.configureGitSettings();
 
+    // Create status bar item for branch match indicator
+    this.branchStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    this.context.subscriptions.push(this.branchStatusBar);
+
     this.initProviders();
     this.initVersionInfoView();
     this.initActivityView();
@@ -187,9 +191,10 @@ class WorkspaceManager {
     const storyVersionObj = this.manager.loadVersionFromPath(activeTextEditor.document.fileName);
     this.visibleVersions[storyVersionObj.version.id] = storyVersionObj;
     this.activeVersion = storyVersionObj.version.id;
-    
+
     this.loadInfoForVersion(storyVersionObj);
     this.activityManager.initDocument(storyVersionObj.version);
+    this.updateBranchStatusBar(storyVersionObj);
   }
 
   /**
@@ -545,6 +550,35 @@ class WorkspaceManager {
   }
 
   /**
+   * Update status bar to show if current editor's branch matches git branch.
+   * @param {Object} storyVersionObj story version object
+   */
+  updateBranchStatusBar(storyVersionObj) {
+    if (storyVersionObj.story.versioningMode !== VersioningMode.GIT) {
+      this.branchStatusBar.hide();
+      return;
+    }
+
+    const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+    const currentBranch = gitUtils.getCurrentBranch(storyDir);
+    const versionBranch = storyVersionObj.version.branch;
+
+    if (currentBranch === versionBranch) {
+      // Branches match - show green indicator
+      this.branchStatusBar.text = `$(check) ${versionBranch}`;
+      this.branchStatusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
+      this.branchStatusBar.tooltip = `Editing correct branch: ${versionBranch}`;
+    } else {
+      // Branches don't match - show warning indicator
+      this.branchStatusBar.text = `$(warning) ${versionBranch} (on ${currentBranch})`;
+      this.branchStatusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+      this.branchStatusBar.tooltip = `WARNING: Editing ${versionBranch} but git is on ${currentBranch}`;
+    }
+
+    this.branchStatusBar.show();
+  }
+
+  /**
    * Check if the TextEditor just selected is a story or not, and if so
    * load its info.
    * @param {vscode.TextEditor} textEditor TextEditor instance
@@ -553,6 +587,7 @@ class WorkspaceManager {
     if (!textEditor || !this.manager.isStory(textEditor.document.fileName)) {
       vscode.commands.executeCommand('setContext', 'versionIsOpen', false);
       this.activeVersion = '';
+      this.branchStatusBar.hide();
       return true;
     }
 
@@ -564,6 +599,7 @@ class WorkspaceManager {
 
     this.loadInfoForVersion(storyVersionObj);
     this.activityManager.initDocument(storyVersionObj.version);
+    this.updateBranchStatusBar(storyVersionObj);
   }
 
   /**
@@ -692,7 +728,7 @@ class WorkspaceManager {
    * Handle document save completion - stage changes and commit if threshold met
    * @param {vscode.TextDocument} textDocument the document that was saved
    */
-  onDidSaveTextDocument(textDocument) {
+  async onDidSaveTextDocument(textDocument) {
     if (!this.manager.isStory(textDocument.fileName)) {
       return true;
     }
@@ -702,6 +738,23 @@ class WorkspaceManager {
     // Auto-stage and conditionally commit for git-based stories after save completes
     if (storyVersionObj.story.versioningMode === VersioningMode.GIT) {
       const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+      const currentBranch = gitUtils.getCurrentBranch(storyDir);
+      const versionBranch = storyVersionObj.version.branch;
+
+      // Check if branches match - if not, ask for confirmation
+      if (currentBranch !== versionBranch) {
+        const choice = await vscode.window.showWarningMessage(
+          `You are editing version "${storyVersionObj.version.name}" (${versionBranch}) but git is on branch "${currentBranch}". There are uncommitted changes on ${currentBranch}. Do you want to commit to ${currentBranch}?`,
+          { modal: true },
+          'Commit to ' + currentBranch,
+          'Cancel'
+        );
+
+        if (choice !== 'Commit to ' + currentBranch) {
+          // User cancelled - don't stage or commit
+          return false;
+        }
+      }
 
       // Always stage changes
       gitUtils.stageChanges(storyDir);
@@ -735,6 +788,9 @@ class WorkspaceManager {
         }
       }
       // Otherwise, changes remain staged for the next save
+
+      // Update status bar after save to reflect any branch changes
+      this.updateBranchStatusBar(storyVersionObj);
     }
   }
 
