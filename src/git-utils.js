@@ -2,6 +2,16 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+// Wrapper to log git commands for debugging
+    function runGit(command, options) {
+    try {
+        console.debug(command);
+    } catch (e) {
+        // ignore logging errors
+    }
+    return execSync(command, options);
+}
+
 /**
  * Git utility functions for story versioning
  */
@@ -12,7 +22,7 @@ const path = require('path');
  */
 function isGitAvailable() {
     try {
-        execSync('git --version', { stdio: 'ignore' });
+            runGit('git --version', { stdio: 'ignore' });
         return true;
     } catch (error) {
         return false;
@@ -28,18 +38,18 @@ function isGitAvailable() {
 function initGitRepo(directory, initialBranch = 'draft1') {
     try {
         // Initialize git repository
-        execSync('git init', { cwd: directory, stdio: 'ignore' });
+        runGit('git init', { cwd: directory, stdio: 'ignore' });
 
         // Set initial branch name
-        execSync(`git checkout -b ${initialBranch}`, { cwd: directory, stdio: 'ignore' });
+        runGit(`git checkout -b ${initialBranch}`, { cwd: directory, stdio: 'ignore' });
 
         // Create .gitignore to ignore any potential temp files
         const gitignorePath = path.join(directory, '.gitignore');
         fs.writeFileSync(gitignorePath, '# Babel story repository\n*.tmp\n');
 
         // Add and commit the .gitignore
-        execSync('git add .gitignore', { cwd: directory, stdio: 'ignore' });
-        execSync('git commit -m "Initial commit"', { cwd: directory, stdio: 'ignore' });
+        runGit('git add .gitignore', { cwd: directory, stdio: 'ignore' });
+        runGit('git commit -m "Initial commit"', { cwd: directory, stdio: 'ignore' });
 
         return true;
     } catch (error) {
@@ -60,8 +70,8 @@ function createAndCommitFile(directory, filename, content = '') {
         const filePath = path.join(directory, filename);
         fs.writeFileSync(filePath, content);
 
-        execSync(`git add "${filename}"`, { cwd: directory, stdio: 'ignore' });
-        execSync(`git commit -m "Created ${filename}"`, { cwd: directory, stdio: 'ignore' });
+        runGit(`git add "${filename}"`, { cwd: directory, stdio: 'ignore' });
+        runGit(`git commit -m "Created ${filename}"`, { cwd: directory, stdio: 'ignore' });
 
         return true;
     } catch (error) {
@@ -77,7 +87,7 @@ function createAndCommitFile(directory, filename, content = '') {
  */
 function stageChanges(directory) {
     try {
-        execSync('git add -A', { cwd: directory, stdio: 'ignore' });
+        runGit('git add -A', { cwd: directory, stdio: 'ignore' });
         return true;
     } catch (error) {
         console.error('Failed to stage changes:', error);
@@ -93,7 +103,7 @@ function stageChanges(directory) {
 function getStagedChangesSize(directory) {
     try {
         // Get staged diff
-        const diff = execSync('git diff --cached', { cwd: directory, encoding: 'utf8' });
+        const diff = runGit('git diff --cached', { cwd: directory, encoding: 'utf8' });
 
         if (!diff.trim()) {
             return 0;
@@ -126,7 +136,7 @@ function getStagedChangesSize(directory) {
 function getStagedWordCount(directory) {
     try {
         // Get staged diff
-        const diff = execSync('git diff --cached', { cwd: directory, encoding: 'utf8' });
+        const diff = runGit('git diff --cached', { cwd: directory, encoding: 'utf8' });
 
         if (!diff.trim()) {
             return { wordsAdded: 0, wordsDeleted: 0, netWords: 0 };
@@ -172,7 +182,7 @@ function getStagedWordCount(directory) {
 function commitStaged(directory, message = 'Auto-save') {
     try {
         // Check if there are any staged changes
-        const status = execSync('git diff --cached --name-only', { cwd: directory, encoding: 'utf8' });
+        const status = runGit('git diff --cached --name-only', { cwd: directory, encoding: 'utf8' });
 
         if (!status.trim()) {
             // No staged changes to commit
@@ -180,7 +190,7 @@ function commitStaged(directory, message = 'Auto-save') {
         }
 
         // Commit
-        execSync(`git commit -m "${message}"`, { cwd: directory, stdio: 'ignore' });
+        runGit(`git commit -m "${message}"`, { cwd: directory, stdio: 'ignore' });
 
         return true;
     } catch (error) {
@@ -198,7 +208,7 @@ function commitStaged(directory, message = 'Auto-save') {
 function commit(directory, message = 'Auto-save') {
     try {
         // Check if there are any changes to commit
-        const status = execSync('git status --porcelain', { cwd: directory, encoding: 'utf8' });
+        const status = runGit('git status --porcelain', { cwd: directory, encoding: 'utf8' });
 
         if (!status.trim()) {
             // No changes to commit
@@ -206,10 +216,10 @@ function commit(directory, message = 'Auto-save') {
         }
 
         // Stage all changes
-        execSync('git add -A', { cwd: directory, stdio: 'ignore' });
+        runGit('git add -A', { cwd: directory, stdio: 'ignore' });
 
-        // Commit
-        execSync(`git commit -m "${message}"`, { cwd: directory, stdio: 'ignore' });
+    // Commit
+        runGit(`git commit -m "${message}"`, { cwd: directory, stdio: 'ignore' });
 
         return true;
     } catch (error) {
@@ -227,7 +237,7 @@ function commit(directory, message = 'Auto-save') {
 function createBranch(directory, branchName) {
     try {
         // Create and checkout the new branch
-        execSync(`git checkout -b ${branchName}`, { cwd: directory, stdio: 'ignore' });
+        runGit(`git checkout -b ${branchName}`, { cwd: directory, stdio: 'ignore' });
 
         return true;
     } catch (error) {
@@ -244,7 +254,7 @@ function createBranch(directory, branchName) {
  */
 function checkoutBranch(directory, branchName) {
     try {
-        execSync(`git checkout ${branchName}`, { cwd: directory, stdio: 'ignore' });
+        runGit(`git checkout ${branchName}`, { cwd: directory, stdio: 'ignore' });
 
         return true;
     } catch (error) {
@@ -260,7 +270,7 @@ function checkoutBranch(directory, branchName) {
  */
 function getCurrentBranch(directory) {
     try {
-        const branch = execSync('git rev-parse --abbrev-ref HEAD', {
+        const branch = runGit('git rev-parse --abbrev-ref HEAD', {
             cwd: directory,
             encoding: 'utf8'
         }).trim();
@@ -279,7 +289,7 @@ function getCurrentBranch(directory) {
  */
 function isGitRepo(directory) {
     try {
-        execSync('git rev-parse --git-dir', { cwd: directory, stdio: 'ignore' });
+        runGit('git rev-parse --git-dir', { cwd: directory, stdio: 'ignore' });
         return true;
     } catch (error) {
         return false;
@@ -299,10 +309,10 @@ function renameBranch(directory, oldName, newName) {
 
         if (currentBranch === oldName) {
             // If we're on the branch, rename it directly
-            execSync(`git branch -m ${newName}`, { cwd: directory, stdio: 'ignore' });
+            runGit(`git branch -m ${newName}`, { cwd: directory, stdio: 'ignore' });
         } else {
             // If we're not on the branch, use the full syntax
-            execSync(`git branch -m ${oldName} ${newName}`, { cwd: directory, stdio: 'ignore' });
+            runGit(`git branch -m ${oldName} ${newName}`, { cwd: directory, stdio: 'ignore' });
         }
 
         return true;
@@ -319,7 +329,7 @@ function renameBranch(directory, oldName, newName) {
  */
 function getAllBranches(directory) {
     try {
-        const output = execSync('git branch --format="%(refname:short)"', {
+        const output = runGit('git branch --format="%(refname:short)"', {
             cwd: directory,
             encoding: 'utf8'
         });
@@ -357,7 +367,7 @@ function deleteBranch(directory, branchName, force = false) {
         }
 
         const deleteFlag = force ? '-D' : '-d';
-        execSync(`git branch ${deleteFlag} ${branchName}`, { cwd: directory, stdio: 'ignore' });
+        runGit(`git branch ${deleteFlag} ${branchName}`, { cwd: directory, stdio: 'ignore' });
 
         return true;
     } catch (error) {

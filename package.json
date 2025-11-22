@@ -3,7 +3,7 @@
     "displayName": "Babel",
     "publisher": "wmorellato",
     "description": "An extension for writers to create and manage stories using VSCode.",
-    "version": "1.12.0-dev",
+    "version": "1.12.0-dev-3",
     "license": "SEE LICENSE IN LICENSE.md",
     "keywords": [
         "writing",
@@ -11,7 +11,7 @@
         "book"
     ],
     "engines": {
-        "vscode": "^1.63.0"
+        "vscode": "^1.95.0"
     },
     "icon": "resources/logo-icon.png",
     "galleryBanner": {
@@ -30,7 +30,7 @@
         "onView:story-entries",
         "workspaceContains:babel.json"
     ],
-    "main": "dist/babel.js",
+    "main": "src/extension.js",
     "contributes": {
         "commands": [
             {
@@ -252,7 +252,10 @@
                 },
                 "kindle.emailService": {
                     "type": "string",
-                    "enum": ["gmail", "yahoo"],
+                    "enum": [
+                        "gmail",
+                        "yahoo"
+                    ],
                     "default": "gmail",
                     "description": "Email service provider to use when sending documents to your Kindle device. Currently, only Gmail and Yahoo are supported."
                 },
@@ -273,7 +276,10 @@
                 },
                 "kindle.exportFormat": {
                     "type": "string",
-                    "enum": ["epub", "docx"],
+                    "enum": [
+                        "epub",
+                        "docx"
+                    ],
                     "default": "epub",
                     "description": "Export format to be used when sending documents to your Kindle device. Currently, only EPUB and DOCX are supported."
                 }
@@ -292,7 +298,7 @@
         "@types/glob": "^7.1.3",
         "@types/mocha": "^7.0.2",
         "@types/node": "^13.13.46",
-        "@types/vscode": "^1.54.0",
+        "@types/vscode": "^1.95.0",
         "chai": "^4.3.4",
         "eslint": "^6.8.0",
         "glob": "^7.1.6",
@@ -300,7 +306,7 @@
         "nock": "^13.0.11",
         "sinon": "^9.2.4",
         "typescript": "^3.9.9",
-        "vscode-test": "^1.5.1",
+        "vscode-test": "^1.6.1",
         "webpack": "^4.46.0",
         "webpack-cli": "^3.3.12"
     },

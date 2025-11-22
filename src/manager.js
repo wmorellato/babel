@@ -169,6 +169,7 @@ class Manager {
       };
 
       this.db.insertVersion(storyId, versionObj);
+      gitUtils.createAndCommitFile(storyDir, normalizedVersionName + '.md', '');
 
       return versionObj;
     } else {
@@ -416,7 +417,7 @@ class Manager {
       return false;
     }
 
-    if (path.basename(documentPath) === 'babel.json') {
+    if (path.basename(documentPath).endsWith('.md') === false) {
       return false;
     }
 
