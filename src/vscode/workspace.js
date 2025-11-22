@@ -609,12 +609,6 @@ class WorkspaceManager {
 
     this.manager.updateVersionInfo(visibleVersion);
 
-    // Auto-commit for git-based stories
-    if (storyVersionObj.story.versioningMode === VersioningMode.GIT) {
-      const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
-      gitUtils.commit(storyDir, 'Auto-save');
-    }
-
     if (![Version.REVISION, Version.TRANSLATION].includes(visibleVersion.name)) {
       this.activityManager.saveStoryActivity(visibleVersion);
     }
@@ -632,6 +626,56 @@ class WorkspaceManager {
 
     if (characters && characters.length > 0) {
       this.highlightCharacters(textEditor, characters);
+    }
+  }
+
+  /**
+   * Handle document save completion - stage changes and commit if threshold met
+   * @param {vscode.TextDocument} textDocument the document that was saved
+   */
+  onDidSaveTextDocument(textDocument) {
+    if (!this.manager.isStory(textDocument.fileName)) {
+      return true;
+    }
+
+    const storyVersionObj = this.manager.loadVersionFromPath(textDocument.fileName);
+
+    // Auto-stage and conditionally commit for git-based stories after save completes
+    if (storyVersionObj.story.versioningMode === VersioningMode.GIT) {
+      const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+
+      // Always stage changes
+      gitUtils.stageChanges(storyDir);
+
+      // Get word count stats
+      const wordStats = gitUtils.getStagedWordCount(storyDir);
+
+      // Only commit if staged changes exceed 2000 characters
+      const stagedSize = gitUtils.getStagedChangesSize(storyDir);
+      if (stagedSize >= 2000) {
+        // Create commit message with word count info
+        let commitMessage = 'Auto-save';
+        if (wordStats.netWords !== 0) {
+          if (wordStats.wordsDeleted === 0) {
+            // Only additions
+            commitMessage = `Auto-save: +${wordStats.wordsAdded} words`;
+          } else if (wordStats.wordsAdded === 0) {
+            // Only deletions
+            commitMessage = `Auto-save: -${wordStats.wordsDeleted} words`;
+          } else {
+            // Both additions and deletions
+            commitMessage = `Auto-save: +${wordStats.wordsAdded}/-${wordStats.wordsDeleted} words (net: ${wordStats.netWords >= 0 ? '+' : ''}${wordStats.netWords})`;
+          }
+        }
+
+        gitUtils.commitStaged(storyDir, commitMessage);
+
+        // Track net words for activity (git-based stories only)
+        if (![Version.REVISION, Version.TRANSLATION].includes(storyVersionObj.version.name)) {
+          this.activityManager.trackGitWords(storyVersionObj.story.id, wordStats.netWords);
+        }
+      }
+      // Otherwise, changes remain staged for the next save
     }
   }
 
