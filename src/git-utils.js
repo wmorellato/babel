@@ -71,7 +71,81 @@ function createAndCommitFile(directory, filename, content = '') {
 }
 
 /**
- * Commit changes in the repository
+ * Stage changes in the repository
+ * @param {string} directory - The git repository directory
+ * @returns {boolean} True if successful
+ */
+function stageChanges(directory) {
+    try {
+        execSync('git add -A', { cwd: directory, stdio: 'ignore' });
+        return true;
+    } catch (error) {
+        console.error('Failed to stage changes:', error);
+        return false;
+    }
+}
+
+/**
+ * Get the character count of staged changes (additions only)
+ * @param {string} directory - The git repository directory
+ * @returns {number} Number of characters in added lines
+ */
+function getStagedChangesSize(directory) {
+    try {
+        // Get staged diff
+        const diff = execSync('git diff --cached', { cwd: directory, encoding: 'utf8' });
+
+        if (!diff.trim()) {
+            return 0;
+        }
+
+        // Count characters in added lines (lines starting with +, excluding +++ headers)
+        const lines = diff.split('\n');
+        let charCount = 0;
+
+        for (const line of lines) {
+            // Count additions, but skip diff metadata lines
+            if (line.startsWith('+') && !line.startsWith('+++')) {
+                // Remove the + prefix and count characters
+                charCount += line.slice(1).length;
+            }
+        }
+
+        return charCount;
+    } catch (error) {
+        console.error('Failed to get staged changes size:', error);
+        return 0;
+    }
+}
+
+/**
+ * Commit staged changes in the repository
+ * @param {string} directory - The git repository directory
+ * @param {string} message - The commit message
+ * @returns {boolean} True if successful
+ */
+function commitStaged(directory, message = 'Auto-save') {
+    try {
+        // Check if there are any staged changes
+        const status = execSync('git diff --cached --name-only', { cwd: directory, encoding: 'utf8' });
+
+        if (!status.trim()) {
+            // No staged changes to commit
+            return true;
+        }
+
+        // Commit
+        execSync(`git commit -m "${message}"`, { cwd: directory, stdio: 'ignore' });
+
+        return true;
+    } catch (error) {
+        console.error('Failed to commit changes:', error);
+        return false;
+    }
+}
+
+/**
+ * Commit changes in the repository (legacy function - stages and commits)
  * @param {string} directory - The git repository directory
  * @param {string} message - The commit message
  * @returns {boolean} True if successful
@@ -252,6 +326,9 @@ module.exports = {
     initGitRepo,
     createAndCommitFile,
     commit,
+    stageChanges,
+    getStagedChangesSize,
+    commitStaged,
     createBranch,
     checkoutBranch,
     getCurrentBranch,

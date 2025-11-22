@@ -630,7 +630,7 @@ class WorkspaceManager {
   }
 
   /**
-   * Handle document save completion - commit to git if applicable
+   * Handle document save completion - stage changes and commit if threshold met
    * @param {vscode.TextDocument} textDocument the document that was saved
    */
   onDidSaveTextDocument(textDocument) {
@@ -640,10 +640,19 @@ class WorkspaceManager {
 
     const storyVersionObj = this.manager.loadVersionFromPath(textDocument.fileName);
 
-    // Auto-commit for git-based stories after save completes
+    // Auto-stage and conditionally commit for git-based stories after save completes
     if (storyVersionObj.story.versioningMode === VersioningMode.GIT) {
       const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
-      gitUtils.commit(storyDir, 'Auto-save');
+
+      // Always stage changes
+      gitUtils.stageChanges(storyDir);
+
+      // Only commit if staged changes exceed 2000 characters
+      const stagedSize = gitUtils.getStagedChangesSize(storyDir);
+      if (stagedSize >= 2000) {
+        gitUtils.commitStaged(storyDir, 'Auto-save');
+      }
+      // Otherwise, changes remain staged for the next save
     }
   }
 
