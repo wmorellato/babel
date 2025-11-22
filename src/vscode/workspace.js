@@ -647,10 +647,33 @@ class WorkspaceManager {
       // Always stage changes
       gitUtils.stageChanges(storyDir);
 
+      // Get word count stats
+      const wordStats = gitUtils.getStagedWordCount(storyDir);
+
       // Only commit if staged changes exceed 2000 characters
       const stagedSize = gitUtils.getStagedChangesSize(storyDir);
       if (stagedSize >= 2000) {
-        gitUtils.commitStaged(storyDir, 'Auto-save');
+        // Create commit message with word count info
+        let commitMessage = 'Auto-save';
+        if (wordStats.netWords !== 0) {
+          if (wordStats.wordsDeleted === 0) {
+            // Only additions
+            commitMessage = `Auto-save: +${wordStats.wordsAdded} words`;
+          } else if (wordStats.wordsAdded === 0) {
+            // Only deletions
+            commitMessage = `Auto-save: -${wordStats.wordsDeleted} words`;
+          } else {
+            // Both additions and deletions
+            commitMessage = `Auto-save: +${wordStats.wordsAdded}/-${wordStats.wordsDeleted} words (net: ${wordStats.netWords >= 0 ? '+' : ''}${wordStats.netWords})`;
+          }
+        }
+
+        gitUtils.commitStaged(storyDir, commitMessage);
+
+        // Track net words for activity (git-based stories only)
+        if (![Version.REVISION, Version.TRANSLATION].includes(storyVersionObj.version.name)) {
+          this.activityManager.trackGitWords(storyVersionObj.story.id, wordStats.netWords);
+        }
       }
       // Otherwise, changes remain staged for the next save
     }

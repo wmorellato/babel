@@ -119,6 +119,51 @@ function getStagedChangesSize(directory) {
 }
 
 /**
+ * Get the net word count of staged changes (additions minus deletions)
+ * @param {string} directory - The git repository directory
+ * @returns {object} Object with wordsAdded, wordsDeleted, and netWords
+ */
+function getStagedWordCount(directory) {
+    try {
+        // Get staged diff
+        const diff = execSync('git diff --cached', { cwd: directory, encoding: 'utf8' });
+
+        if (!diff.trim()) {
+            return { wordsAdded: 0, wordsDeleted: 0, netWords: 0 };
+        }
+
+        const lines = diff.split('\n');
+        let wordsAdded = 0;
+        let wordsDeleted = 0;
+
+        for (const line of lines) {
+            if (line.startsWith('+') && !line.startsWith('+++')) {
+                // Added line - count words
+                const text = line.slice(1).trim();
+                if (text.length > 0) {
+                    wordsAdded += text.split(/\s+/).filter(w => w.length > 0).length;
+                }
+            } else if (line.startsWith('-') && !line.startsWith('---')) {
+                // Deleted line - count words
+                const text = line.slice(1).trim();
+                if (text.length > 0) {
+                    wordsDeleted += text.split(/\s+/).filter(w => w.length > 0).length;
+                }
+            }
+        }
+
+        return {
+            wordsAdded,
+            wordsDeleted,
+            netWords: wordsAdded - wordsDeleted,
+        };
+    } catch (error) {
+        console.error('Failed to get staged word count:', error);
+        return { wordsAdded: 0, wordsDeleted: 0, netWords: 0 };
+    }
+}
+
+/**
  * Commit staged changes in the repository
  * @param {string} directory - The git repository directory
  * @param {string} message - The commit message
@@ -328,6 +373,7 @@ module.exports = {
     commit,
     stageChanges,
     getStagedChangesSize,
+    getStagedWordCount,
     commitStaged,
     createBranch,
     checkoutBranch,
