@@ -152,6 +152,11 @@ class WorkspaceManager {
     this.branchStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     this.context.subscriptions.push(this.branchStatusBar);
 
+    // Create status bar item for commit squashing
+    this.squashStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
+    this.squashStatusBar.command = 'babel.squashTodayCommits';
+    this.context.subscriptions.push(this.squashStatusBar);
+
     this.initProviders();
     this.initVersionInfoView();
     this.initActivityView();
@@ -195,6 +200,7 @@ class WorkspaceManager {
     this.loadInfoForVersion(storyVersionObj);
     this.activityManager.initDocument(storyVersionObj.version);
     this.updateBranchStatusBar(storyVersionObj);
+    this.updateSquashStatusBar(storyVersionObj);
   }
 
   /**
@@ -579,6 +585,115 @@ class WorkspaceManager {
   }
 
   /**
+   * Update status bar to show commit count from today and enable squashing.
+   * @param {Object} storyVersionObj story version object
+   */
+  updateSquashStatusBar(storyVersionObj) {
+    if (!storyVersionObj || storyVersionObj.story.versioningMode !== VersioningMode.GIT) {
+      this.squashStatusBar.hide();
+      return;
+    }
+
+    const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+    const commitCount = gitUtils.getTodayCommitCount(storyDir);
+
+    if (commitCount > 1) {
+      this.squashStatusBar.text = `$(git-commit) Squash commits (${commitCount})`;
+      this.squashStatusBar.tooltip = `Click to squash ${commitCount} commits from today into one`;
+      this.squashStatusBar.show();
+    } else {
+      this.squashStatusBar.hide();
+    }
+  }
+
+  /**
+   * Squash all commits from today into a single commit for the active story
+   */
+  async squashTodayCommitsCommand() {
+    if (!this.activeVersion) {
+      vscode.window.showWarningMessage('No story is currently open');
+      return;
+    }
+
+    const storyVersionObj = this.visibleVersions[this.activeVersion];
+    if (!storyVersionObj || storyVersionObj.story.versioningMode !== VersioningMode.GIT) {
+      vscode.window.showWarningMessage('Current story is not using git versioning');
+      return;
+    }
+
+    const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+    const commitCount = gitUtils.getTodayCommitCount(storyDir);
+
+    if (commitCount <= 1) {
+      vscode.window.showInformationMessage('No commits to squash (need at least 2 commits from today)');
+      return;
+    }
+
+    const choice = await vscode.window.showWarningMessage(
+      `Squash ${commitCount} commits from today into a single commit?`,
+      { modal: true },
+      'Squash',
+      'Cancel'
+    );
+
+    if (choice !== 'Squash') {
+      return;
+    }
+
+    const success = gitUtils.squashTodayCommits(storyDir);
+
+    if (success) {
+      vscode.window.showInformationMessage(`Successfully squashed ${commitCount} commits into one`);
+      this.updateSquashStatusBar(storyVersionObj);
+    } else {
+      vscode.window.showErrorMessage('Failed to squash commits');
+    }
+  }
+
+  /**
+   * Check if there are commits to squash and prompt user on close
+   * @returns {Promise<boolean>} True if should proceed with close
+   */
+  async checkSquashOnClose() {
+    if (!this.activeVersion) {
+      return true;
+    }
+
+    const storyVersionObj = this.visibleVersions[this.activeVersion];
+    if (!storyVersionObj || storyVersionObj.story.versioningMode !== VersioningMode.GIT) {
+      return true;
+    }
+
+    const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+    const commitCount = gitUtils.getTodayCommitCount(storyDir);
+
+    if (commitCount > 3) {
+      const choice = await vscode.window.showWarningMessage(
+        `You have ${commitCount} commits from today. Do you want to squash them before closing?`,
+        { modal: true },
+        'Squash & Close',
+        'Close Without Squashing',
+        'Cancel'
+      );
+
+      if (choice === 'Cancel') {
+        return false;
+      }
+
+      if (choice === 'Squash & Close') {
+        const success = gitUtils.squashTodayCommits(storyDir);
+        if (success) {
+          vscode.window.showInformationMessage(`Successfully squashed ${commitCount} commits`);
+        } else {
+          vscode.window.showErrorMessage('Failed to squash commits');
+        }
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * Check if the TextEditor just selected is a story or not, and if so
    * load its info.
    * @param {vscode.TextEditor} textEditor TextEditor instance
@@ -588,6 +703,7 @@ class WorkspaceManager {
       vscode.commands.executeCommand('setContext', 'versionIsOpen', false);
       this.activeVersion = '';
       this.branchStatusBar.hide();
+      this.squashStatusBar.hide();
       return true;
     }
 
@@ -600,6 +716,7 @@ class WorkspaceManager {
     this.loadInfoForVersion(storyVersionObj);
     this.activityManager.initDocument(storyVersionObj.version);
     this.updateBranchStatusBar(storyVersionObj);
+    this.updateSquashStatusBar(storyVersionObj);
   }
 
   /**
@@ -789,8 +906,9 @@ class WorkspaceManager {
       }
       // Otherwise, changes remain staged for the next save
 
-      // Update status bar after save to reflect any branch changes
+      // Update status bars after save
       this.updateBranchStatusBar(storyVersionObj);
+      this.updateSquashStatusBar(storyVersionObj);
     }
   }
 

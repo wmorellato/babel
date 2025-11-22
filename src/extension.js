@@ -21,6 +21,7 @@ function redirectCommandsToError(context) {
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeStory', showError));
   context.subscriptions.push(vscode.commands.registerCommand('babel.refreshExplorer', showError));
   context.subscriptions.push(vscode.commands.registerCommand('babel.insertMetadata', showError));
+  context.subscriptions.push(vscode.commands.registerCommand('babel.squashTodayCommits', showError));
 }
 
 /**
@@ -67,13 +68,23 @@ async function activate(context) {
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeStory', (node) => workspace.removeStory(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.refreshExplorer', () => workspace.updateViews()));
   context.subscriptions.push(vscode.commands.registerCommand('babel.insertMetadata', () => workspace.insertMetadata()));
+  context.subscriptions.push(vscode.commands.registerCommand('babel.squashTodayCommits', () => workspace.squashTodayCommitsCommand()));
 
   vscode.languages.registerHoverProvider('markdown', { provideHover: (document, position, token) => workspace.wordCountHoverProvider(document, position, token) });
+
+  // Store workspace reference for deactivate
+  context.workspaceInstance = workspace;
 }
 
 exports.activate = activate;
 
-function deactivate() { }
+async function deactivate() {
+  // Get workspace instance from context if available
+  const workspace = this?.workspaceInstance;
+  if (workspace) {
+    await workspace.checkSquashOnClose();
+  }
+}
 
 module.exports = {
   activate,
