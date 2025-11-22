@@ -13,6 +13,7 @@ const { Manager, Version, VersioningMode } = require('../manager');
 const { ActivityManager } = require('./activity-manager');
 const { ActivityChartViewProvider } = require('./activity-view');
 const { StoryDataProvider, VersionInfoProvider, BackupHistoryProvider } = require('./story-view-data-provider');
+const { SettingsManager } = require('./settings-manager');
 const Errors = require('../errors');
 const gitUtils = require('../git-utils');
 
@@ -142,6 +143,10 @@ class WorkspaceManager {
     this.context = context;
     this.manager = new Manager(this.workspaceDirectory);
     this.activityManager = new ActivityManager(this.workspaceDirectory);
+
+    // Configure VSCode settings to prevent Git extension listener leak
+    const settingsManager = new SettingsManager(this.workspaceDirectory);
+    settingsManager.configureGitSettings();
 
     this.initProviders();
     this.initVersionInfoView();
