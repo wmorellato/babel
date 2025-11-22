@@ -9,11 +9,13 @@ const settings = require('../settings');
 const nodemailer = require('nodemailer');
 const { Exporter } = require('../exporter');
 const { convertFileWithPandocTemplates } = require('../exporter/pandoc-templates-util');
-const { Manager, Version } = require('../manager');
+const { Manager, Version, VersioningMode } = require('../manager');
 const { ActivityManager } = require('./activity-manager');
 const { ActivityChartViewProvider } = require('./activity-view');
 const { StoryDataProvider, VersionInfoProvider, BackupHistoryProvider } = require('./story-view-data-provider');
+const { SettingsManager } = require('./settings-manager');
 const Errors = require('../errors');
+const gitUtils = require('../git-utils');
 
 let decorationTypes = [];
 
@@ -142,6 +144,14 @@ class WorkspaceManager {
     this.manager = new Manager(this.workspaceDirectory);
     this.activityManager = new ActivityManager(this.workspaceDirectory);
 
+    // Configure VSCode settings to prevent Git extension listener leak
+    const settingsManager = new SettingsManager(this.workspaceDirectory);
+    settingsManager.configureGitSettings();
+
+    // Create status bar item for branch match indicator
+    this.branchStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    this.context.subscriptions.push(this.branchStatusBar);
+
     this.initProviders();
     this.initVersionInfoView();
     this.initActivityView();
@@ -181,9 +191,10 @@ class WorkspaceManager {
     const storyVersionObj = this.manager.loadVersionFromPath(activeTextEditor.document.fileName);
     this.visibleVersions[storyVersionObj.version.id] = storyVersionObj;
     this.activeVersion = storyVersionObj.version.id;
-    
+
     this.loadInfoForVersion(storyVersionObj);
     this.activityManager.initDocument(storyVersionObj.version);
+    this.updateBranchStatusBar(storyVersionObj);
   }
 
   /**
@@ -252,12 +263,47 @@ class WorkspaceManager {
    * @param {Object} versionObj version object
    */
   openVersionCommand(simpleStoryObj, versionObj) {
+    // Check if this is a git-based story and checkout the branch if needed
+    if (simpleStoryObj.versioningMode === VersioningMode.GIT && versionObj.branch) {
+      const storyDir = path.join(this.manager.workspaceDirectory, simpleStoryObj.id);
+      const currentBranch = gitUtils.getCurrentBranch(storyDir);
+
+      // Only checkout if we're not already on the target branch
+      if (currentBranch !== versionObj.branch) {
+        // Commit any staged changes on the current branch before switching
+        const wordStats = gitUtils.getStagedWordCount(storyDir);
+
+        if (wordStats.netWords !== 0 || wordStats.wordsAdded > 0 || wordStats.wordsDeleted > 0) {
+          let commitMessage = 'Auto-save on version switch';
+          if (wordStats.netWords !== 0) {
+            if (wordStats.wordsDeleted === 0) {
+              commitMessage = `Auto-save on version switch: +${wordStats.wordsAdded} words`;
+            } else if (wordStats.wordsAdded === 0) {
+              commitMessage = `Auto-save on version switch: -${wordStats.wordsDeleted} words`;
+            } else {
+              commitMessage = `Auto-save on version switch: +${wordStats.wordsAdded}/-${wordStats.wordsDeleted} words (net: ${wordStats.netWords >= 0 ? '+' : ''}${wordStats.netWords})`;
+            }
+          }
+
+          gitUtils.commitStaged(storyDir, commitMessage);
+
+          // Track net words for activity
+          // Note: we need to find the current version's name to check if it's revision/translation
+          // For now, we'll track it since we're switching branches anyway
+          this.activityManager.trackGitWords(simpleStoryObj.id, wordStats.netWords);
+        }
+
+        // Now checkout the new branch
+        gitUtils.checkoutBranch(storyDir, versionObj.branch);
+      }
+    }
+
     const versionPath = this.manager.getVersionPath(simpleStoryObj.id, versionObj.name);
 
     return vscode.workspace.openTextDocument(versionPath).then((textDocument) => {
       this.updateVersionInfoData(simpleStoryObj, versionObj);
       this.activityManager.initDocument(versionObj);
-      
+
       return vscode.window.showTextDocument(textDocument);
     });
   }
@@ -295,6 +341,16 @@ class WorkspaceManager {
   }
 
   async sendToKindle(versionNode) {
+    // Checkout the branch if it's a git-based story
+    if (versionNode.simpleStoryObj.versioningMode === VersioningMode.GIT && versionNode.version.branch) {
+      const storyDir = path.join(this.manager.workspaceDirectory, versionNode.simpleStoryObj.id);
+      const currentBranch = gitUtils.getCurrentBranch(storyDir);
+
+      if (currentBranch !== versionNode.version.branch) {
+        gitUtils.checkoutBranch(storyDir, versionNode.version.branch);
+      }
+    }
+
     const versionPath = this.manager.getVersionPath(versionNode.simpleStoryObj.id, versionNode.version.name);
     const tmpDir = os.tmpdir();
     const normTitle = utils.titleToFilename(versionNode.simpleStoryObj.title);
@@ -494,6 +550,35 @@ class WorkspaceManager {
   }
 
   /**
+   * Update status bar to show if current editor's branch matches git branch.
+   * @param {Object} storyVersionObj story version object
+   */
+  updateBranchStatusBar(storyVersionObj) {
+    if (storyVersionObj.story.versioningMode !== VersioningMode.GIT) {
+      this.branchStatusBar.hide();
+      return;
+    }
+
+    const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+    const currentBranch = gitUtils.getCurrentBranch(storyDir);
+    const versionBranch = storyVersionObj.version.branch;
+
+    if (currentBranch === versionBranch) {
+      // Branches match - show green indicator
+      this.branchStatusBar.text = `$(check) ${versionBranch}`;
+      this.branchStatusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
+      this.branchStatusBar.tooltip = `Editing correct branch: ${versionBranch}`;
+    } else {
+      // Branches don't match - show warning indicator
+      this.branchStatusBar.text = `$(warning) ${versionBranch} (on ${currentBranch})`;
+      this.branchStatusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+      this.branchStatusBar.tooltip = `WARNING: Editing ${versionBranch} but git is on ${currentBranch}`;
+    }
+
+    this.branchStatusBar.show();
+  }
+
+  /**
    * Check if the TextEditor just selected is a story or not, and if so
    * load its info.
    * @param {vscode.TextEditor} textEditor TextEditor instance
@@ -502,6 +587,7 @@ class WorkspaceManager {
     if (!textEditor || !this.manager.isStory(textEditor.document.fileName)) {
       vscode.commands.executeCommand('setContext', 'versionIsOpen', false);
       this.activeVersion = '';
+      this.branchStatusBar.hide();
       return true;
     }
 
@@ -513,6 +599,7 @@ class WorkspaceManager {
 
     this.loadInfoForVersion(storyVersionObj);
     this.activityManager.initDocument(storyVersionObj.version);
+    this.updateBranchStatusBar(storyVersionObj);
   }
 
   /**
@@ -565,12 +652,42 @@ class WorkspaceManager {
     }
 
     const storyVersionObj = this.manager.loadVersionFromPath(textDocument.fileName);
+
+    // Commit any staged changes for git-based stories before closing
+    if (storyVersionObj.story.versioningMode === VersioningMode.GIT) {
+      const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+
+      // Get word count stats for commit message
+      const wordStats = gitUtils.getStagedWordCount(storyDir);
+
+      // Commit any remaining staged changes
+      if (wordStats.netWords !== 0 || wordStats.wordsAdded > 0 || wordStats.wordsDeleted > 0) {
+        let commitMessage = 'Auto-save on close';
+        if (wordStats.netWords !== 0) {
+          if (wordStats.wordsDeleted === 0) {
+            commitMessage = `Auto-save on close: +${wordStats.wordsAdded} words`;
+          } else if (wordStats.wordsAdded === 0) {
+            commitMessage = `Auto-save on close: -${wordStats.wordsDeleted} words`;
+          } else {
+            commitMessage = `Auto-save on close: +${wordStats.wordsAdded}/-${wordStats.wordsDeleted} words (net: ${wordStats.netWords >= 0 ? '+' : ''}${wordStats.netWords})`;
+          }
+        }
+
+        gitUtils.commitStaged(storyDir, commitMessage);
+
+        // Track net words for activity
+        if (![Version.REVISION, Version.TRANSLATION].includes(storyVersionObj.version.name)) {
+          this.activityManager.trackGitWords(storyVersionObj.story.id, wordStats.netWords);
+        }
+      }
+    }
+
     delete this.visibleVersions[storyVersionObj.version.id];
   }
 
   /**
    * Flush the modifications into the version object in the database.
-   * @param {TextDocumentWillSaveEvent} documentWillSaveEvent the event fired by vscode 
+   * @param {TextDocumentWillSaveEvent} documentWillSaveEvent the event fired by vscode
    */
   onWillSaveDocument(documentWillSaveEvent) {
     if (!this.manager.isStory(documentWillSaveEvent.document.fileName)) {
@@ -604,6 +721,76 @@ class WorkspaceManager {
 
     if (characters && characters.length > 0) {
       this.highlightCharacters(textEditor, characters);
+    }
+  }
+
+  /**
+   * Handle document save completion - stage changes and commit if threshold met
+   * @param {vscode.TextDocument} textDocument the document that was saved
+   */
+  async onDidSaveTextDocument(textDocument) {
+    if (!this.manager.isStory(textDocument.fileName)) {
+      return true;
+    }
+
+    const storyVersionObj = this.manager.loadVersionFromPath(textDocument.fileName);
+
+    // Auto-stage and conditionally commit for git-based stories after save completes
+    if (storyVersionObj.story.versioningMode === VersioningMode.GIT) {
+      const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+      const currentBranch = gitUtils.getCurrentBranch(storyDir);
+      const versionBranch = storyVersionObj.version.branch;
+
+      // Check if branches match - if not, ask for confirmation
+      if (currentBranch !== versionBranch) {
+        const choice = await vscode.window.showWarningMessage(
+          `You are editing version "${storyVersionObj.version.name}" (${versionBranch}) but git is on branch "${currentBranch}". There are uncommitted changes on ${currentBranch}. Do you want to commit to ${currentBranch}?`,
+          { modal: true },
+          'Commit to ' + currentBranch,
+          'Cancel'
+        );
+
+        if (choice !== 'Commit to ' + currentBranch) {
+          // User cancelled - don't stage or commit
+          return false;
+        }
+      }
+
+      // Always stage changes
+      gitUtils.stageChanges(storyDir);
+
+      // Get word count stats
+      const wordStats = gitUtils.getStagedWordCount(storyDir);
+
+      // Only commit if staged changes exceed 2000 characters
+      const stagedSize = gitUtils.getStagedChangesSize(storyDir);
+      if (stagedSize >= 2000) {
+        // Create commit message with word count info
+        let commitMessage = 'Auto-save';
+        if (wordStats.netWords !== 0) {
+          if (wordStats.wordsDeleted === 0) {
+            // Only additions
+            commitMessage = `Auto-save: +${wordStats.wordsAdded} words`;
+          } else if (wordStats.wordsAdded === 0) {
+            // Only deletions
+            commitMessage = `Auto-save: -${wordStats.wordsDeleted} words`;
+          } else {
+            // Both additions and deletions
+            commitMessage = `Auto-save: +${wordStats.wordsAdded}/-${wordStats.wordsDeleted} words (net: ${wordStats.netWords >= 0 ? '+' : ''}${wordStats.netWords})`;
+          }
+        }
+
+        gitUtils.commitStaged(storyDir, commitMessage);
+
+        // Track net words for activity (git-based stories only)
+        if (![Version.REVISION, Version.TRANSLATION].includes(storyVersionObj.version.name)) {
+          this.activityManager.trackGitWords(storyVersionObj.story.id, wordStats.netWords);
+        }
+      }
+      // Otherwise, changes remain staged for the next save
+
+      // Update status bar after save to reflect any branch changes
+      this.updateBranchStatusBar(storyVersionObj);
     }
   }
 

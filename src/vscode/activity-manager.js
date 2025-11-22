@@ -22,10 +22,21 @@ class ActivityManager {
 
     if (actDate) {
       actDate.entries.forEach((e) => {
-        this.activityEntries[e.storyId] = {
-          sessionWordCount: e.wordCount,
-          initialWordCount: e.initialWordCount, // this is wrong
-        };
+        // Backward compatibility: if initialWordCount exists, it's an old entry
+        if (e.initialWordCount !== undefined) {
+          // Old format: use initialWordCount
+          this.activityEntries[e.storyId] = {
+            sessionWordCount: e.wordCount,
+            initialWordCount: e.initialWordCount,
+            gitBased: false,
+          };
+        } else {
+          // New format: wordCount is the net words from git
+          this.activityEntries[e.storyId] = {
+            sessionWordCount: e.wordCount,
+            gitBased: true,
+          };
+        }
       });
     }
   }
@@ -41,20 +52,51 @@ class ActivityManager {
 
   /**
    * Starts monitoring the given story for updates.
+   * Only used for file-based stories. Git-based stories use trackGitWords instead.
    * @param {Object} versionObj version object
    */
   initDocument(versionObj) {
     console.log('Initializing document with descriptor', versionObj);
-    
+
     if (!Object.keys(this.activityEntries).includes(versionObj.storyId)) {
       this.activityEntries[versionObj.storyId] = {
         sessionWordCount: 0,
         initialWordCount: versionObj.wordCount,
-      }
+        gitBased: false,
+      };
     } else {
       const existingEntry = this.activityEntries[versionObj.storyId];
-      existingEntry.initialWordCount = versionObj.wordCount - existingEntry.sessionWordCount;
+      // Don't overwrite git-based tracking
+      if (!existingEntry.gitBased) {
+        existingEntry.initialWordCount = versionObj.wordCount - existingEntry.sessionWordCount;
+      }
     }
+  }
+
+  /**
+   * Track net words from git commits for git-based stories.
+   * This accumulates net words written (additions minus deletions).
+   * @param {String} storyId story id
+   * @param {Number} netWords net words written (can be negative)
+   */
+  trackGitWords(storyId, netWords) {
+    if (!Object.keys(this.activityEntries).includes(storyId)) {
+      this.activityEntries[storyId] = {
+        sessionWordCount: netWords,
+        gitBased: true, // Mark as git-based tracking
+      };
+    } else {
+      this.activityEntries[storyId].sessionWordCount += netWords;
+      this.activityEntries[storyId].gitBased = true;
+    }
+
+    // Save to database
+    this.db.insertActivityEntry({
+      storyId,
+      date: this.identifier,
+      wordCount: this.activityEntries[storyId].sessionWordCount,
+      // Don't store initialWordCount for git-based stories
+    });
   }
 
   /**
@@ -72,6 +114,7 @@ class ActivityManager {
    * word count. If the difference turns out to be negative (i.e. the
    * author excluded more words than he/she wrote), then we set the
    * session word count as zero.
+   * Only used for file-based stories. Git-based stories use trackGitWords instead.
    * @param {Object} versionObj version object
    */
   updateActivity(versionObj) {
@@ -81,18 +124,26 @@ class ActivityManager {
       return;
     }
 
-    const wordCountDiff = versionObj.wordCount - this.activityEntries[versionObj.storyId].initialWordCount;
-    
+    const entry = this.activityEntries[versionObj.storyId];
+
+    // Don't update git-based tracking this way
+    if (entry.gitBased) {
+      return;
+    }
+
+    const wordCountDiff = versionObj.wordCount - entry.initialWordCount;
+
     if (wordCountDiff < 0) {
-      this.activityEntries[versionObj.storyId].sessionWordCount = 0;
+      entry.sessionWordCount = 0;
     } else {
-      this.activityEntries[versionObj.storyId].sessionWordCount = wordCountDiff;
+      entry.sessionWordCount = wordCountDiff;
     }
   }
 
   /**
    * Save a single story activity into database.
    * This is to be used when saving a document.
+   * Only used for file-based stories. Git-based stories save via trackGitWords.
    * @param {Object} versionObj version object
    */
   saveStoryActivity(versionObj) {
@@ -102,13 +153,20 @@ class ActivityManager {
     }
 
     const storyId = versionObj.storyId;
+    const entry = this.activityEntries[storyId];
 
+    // Don't save git-based tracking this way (it's saved via trackGitWords)
+    if (entry.gitBased) {
+      return;
+    }
+
+    // Old format: save both wordCount and initialWordCount
     this.db.insertActivityEntry({
       storyId,
       date: this.identifier,
-      wordCount: this.activityEntries[storyId].sessionWordCount,
-      initialWordCount: this.activityEntries[storyId].initialWordCount,
-    })
+      wordCount: entry.sessionWordCount,
+      initialWordCount: entry.initialWordCount,
+    });
   }
 }
 
