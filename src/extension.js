@@ -85,7 +85,7 @@ exports.activate = activate;
 
 async function deactivate() {
   // Get workspace instance from context if available
-  const workspace = this?.workspaceInstance;
+  const workspace = this.workspaceInstance;
   if (workspace) {
     await workspace.checkSquashOnClose();
   }
