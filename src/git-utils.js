@@ -376,6 +376,96 @@ function deleteBranch(directory, branchName, force = false) {
     }
 }
 
+/**
+ * Get the number of commits made today on the current branch
+ * @param {string} directory - The git repository directory
+ * @returns {number} Number of commits made today
+ */
+function getTodayCommitCount(directory) {
+    try {
+        // Get today's date at midnight in ISO format
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayISO = today.toISOString();
+
+        // Count commits since midnight today
+        const output = runGit(`git rev-list --count --since="${todayISO}" HEAD`, {
+            cwd: directory,
+            encoding: 'utf8'
+        });
+
+        return parseInt(output.trim(), 10) || 0;
+    } catch (error) {
+        console.error('Failed to get today commit count:', error);
+        return 0;
+    }
+}
+
+/**
+ * Squash all commits from today into a single commit
+ * @param {string} directory - The git repository directory
+ * @param {string} message - The commit message for the squashed commit (optional)
+ * @returns {boolean} True if successful
+ */
+function squashTodayCommits(directory, message = null) {
+    try {
+        const commitCount = getTodayCommitCount(directory);
+
+        if (commitCount <= 1) {
+            // Nothing to squash
+            return true;
+        }
+
+        // Get today's date at midnight in ISO format
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayISO = today.toISOString();
+
+        // Get the commit hash before today's first commit
+        const baseCommitOutput = runGit(`git rev-list --reverse --since="${todayISO}" HEAD | head -n 1`, {
+            cwd: directory,
+            encoding: 'utf8',
+            shell: '/bin/bash'
+        });
+        const firstTodayCommit = baseCommitOutput.trim();
+
+        if (!firstTodayCommit) {
+            console.error('Could not find first commit from today');
+            return false;
+        }
+
+        // Get the parent of the first commit from today
+        const baseCommit = runGit(`git rev-parse ${firstTodayCommit}^`, {
+            cwd: directory,
+            encoding: 'utf8'
+        }).trim();
+
+        // If no custom message provided, collect all commit messages from today
+        let finalMessage = message;
+        if (!finalMessage) {
+            const messages = runGit(`git log --since="${todayISO}" --format=%B HEAD`, {
+                cwd: directory,
+                encoding: 'utf8'
+            }).trim();
+
+            // Create a summary message
+            const branch = getCurrentBranch(directory);
+            finalMessage = `Work on ${branch} - ${commitCount} commits squashed\n\n${messages}`;
+        }
+
+        // Soft reset to the base commit (keeps all changes staged)
+        runGit(`git reset --soft ${baseCommit}`, { cwd: directory, stdio: 'ignore' });
+
+        // Commit all the changes with the combined message
+        runGit(`git commit -m "${finalMessage.replace(/"/g, '\\"')}"`, { cwd: directory, stdio: 'ignore' });
+
+        return true;
+    } catch (error) {
+        console.error('Failed to squash today commits:', error);
+        return false;
+    }
+}
+
 module.exports = {
     isGitAvailable,
     initGitRepo,
@@ -391,5 +481,7 @@ module.exports = {
     isGitRepo,
     renameBranch,
     getAllBranches,
-    deleteBranch
+    deleteBranch,
+    getTodayCommitCount,
+    squashTodayCommits
 };
