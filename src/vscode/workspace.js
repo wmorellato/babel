@@ -157,6 +157,10 @@ class WorkspaceManager {
     this.squashStatusBar.command = 'babel.squashTodayCommits';
     this.context.subscriptions.push(this.squashStatusBar);
 
+    // Create status bar item for daily word count
+    this.dailyWordsStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 98);
+    this.context.subscriptions.push(this.dailyWordsStatusBar);
+
     this.initProviders();
     this.initVersionInfoView();
     this.initActivityView();
@@ -201,6 +205,7 @@ class WorkspaceManager {
     this.activityManager.initDocument(storyVersionObj.version);
     this.updateBranchStatusBar(storyVersionObj);
     this.updateSquashStatusBar(storyVersionObj);
+    this.updateDailyWordsStatusBar(storyVersionObj);
   }
 
   /**
@@ -607,6 +612,32 @@ class WorkspaceManager {
   }
 
   /**
+   * Update status bar to show net words written today.
+   * @param {Object} storyVersionObj story version object
+   */
+  updateDailyWordsStatusBar(storyVersionObj) {
+    if (!storyVersionObj || storyVersionObj.story.versioningMode !== VersioningMode.GIT) {
+      this.dailyWordsStatusBar.hide();
+      return;
+    }
+
+    const storyDir = path.join(this.manager.workspaceDirectory, storyVersionObj.story.id);
+    const netWords = gitUtils.getTodayNetWords(storyDir);
+
+    if (netWords !== 0) {
+      const sign = netWords >= 0 ? '+' : '';
+      this.dailyWordsStatusBar.text = `$(edit) Today: ${sign}${netWords} words`;
+      this.dailyWordsStatusBar.tooltip = `Net words written today: ${sign}${netWords}`;
+      this.dailyWordsStatusBar.show();
+    } else {
+      // Still show it, but indicate no words written yet
+      this.dailyWordsStatusBar.text = `$(edit) Today: 0 words`;
+      this.dailyWordsStatusBar.tooltip = 'No words written today yet';
+      this.dailyWordsStatusBar.show();
+    }
+  }
+
+  /**
    * Squash all commits from today into a single commit for the active story
    */
   async squashTodayCommitsCommand() {
@@ -645,6 +676,7 @@ class WorkspaceManager {
     if (success) {
       vscode.window.showInformationMessage(`Successfully squashed ${commitCount} commits into one`);
       this.updateSquashStatusBar(storyVersionObj);
+      this.updateDailyWordsStatusBar(storyVersionObj);
     } else {
       vscode.window.showErrorMessage('Failed to squash commits');
     }
@@ -704,6 +736,7 @@ class WorkspaceManager {
       this.activeVersion = '';
       this.branchStatusBar.hide();
       this.squashStatusBar.hide();
+      this.dailyWordsStatusBar.hide();
       return true;
     }
 
@@ -717,6 +750,7 @@ class WorkspaceManager {
     this.activityManager.initDocument(storyVersionObj.version);
     this.updateBranchStatusBar(storyVersionObj);
     this.updateSquashStatusBar(storyVersionObj);
+    this.updateDailyWordsStatusBar(storyVersionObj);
   }
 
   /**
@@ -909,6 +943,7 @@ class WorkspaceManager {
       // Update status bars after save
       this.updateBranchStatusBar(storyVersionObj);
       this.updateSquashStatusBar(storyVersionObj);
+      this.updateDailyWordsStatusBar(storyVersionObj);
     }
   }
 

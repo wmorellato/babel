@@ -466,6 +466,101 @@ function squashTodayCommits(directory, message = null) {
     }
 }
 
+/**
+ * Get the total net words written today (including staged and unstaged changes)
+ * @param {string} directory - The git repository directory
+ * @returns {number} Net words written today
+ */
+function getTodayNetWords(directory) {
+    try {
+        // Get today's date at midnight in ISO format
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayISO = today.toISOString();
+
+        // Get the commit count to check if there are any commits today
+        const commitCount = getTodayCommitCount(directory);
+
+        if (commitCount === 0) {
+            // No commits today, check for unstaged/staged changes only
+            const diff = runGit('git diff HEAD', { cwd: directory, encoding: 'utf8' });
+            return countWordsInDiff(diff);
+        }
+
+        // Get the first commit from today
+        const firstTodayCommitOutput = runGit(`git rev-list --reverse --since="${todayISO}" HEAD | head -n 1`, {
+            cwd: directory,
+            encoding: 'utf8',
+            shell: '/bin/bash'
+        });
+        const firstTodayCommit = firstTodayCommitOutput.trim();
+
+        if (!firstTodayCommit) {
+            // No commits found, return 0
+            return 0;
+        }
+
+        // Get the parent of the first commit from today (state at start of day)
+        let baseCommit;
+        try {
+            baseCommit = runGit(`git rev-parse ${firstTodayCommit}^`, {
+                cwd: directory,
+                encoding: 'utf8'
+            }).trim();
+        } catch (error) {
+            // First commit has no parent (initial commit), compare against empty tree
+            baseCommit = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'; // git's empty tree SHA
+        }
+
+        // Get diff from base to current state (including uncommitted changes)
+        // This shows all changes made today
+        const diff = runGit(`git diff ${baseCommit} HEAD`, { cwd: directory, encoding: 'utf8' });
+        let netWords = countWordsInDiff(diff);
+
+        // Also include staged and unstaged changes
+        const uncommittedDiff = runGit('git diff HEAD', { cwd: directory, encoding: 'utf8' });
+        netWords += countWordsInDiff(uncommittedDiff);
+
+        return netWords;
+    } catch (error) {
+        console.error('Failed to get today net words:', error);
+        return 0;
+    }
+}
+
+/**
+ * Helper function to count net words in a git diff
+ * @param {string} diff - The git diff output
+ * @returns {number} Net words (additions - deletions)
+ */
+function countWordsInDiff(diff) {
+    if (!diff || !diff.trim()) {
+        return 0;
+    }
+
+    const lines = diff.split('\n');
+    let wordsAdded = 0;
+    let wordsDeleted = 0;
+
+    for (const line of lines) {
+        if (line.startsWith('+') && !line.startsWith('+++')) {
+            // Added line - count words
+            const text = line.slice(1).trim();
+            if (text.length > 0) {
+                wordsAdded += text.split(/\s+/).filter(w => w.length > 0).length;
+            }
+        } else if (line.startsWith('-') && !line.startsWith('---')) {
+            // Deleted line - count words
+            const text = line.slice(1).trim();
+            if (text.length > 0) {
+                wordsDeleted += text.split(/\s+/).filter(w => w.length > 0).length;
+            }
+        }
+    }
+
+    return wordsAdded - wordsDeleted;
+}
+
 module.exports = {
     isGitAvailable,
     initGitRepo,
@@ -483,5 +578,6 @@ module.exports = {
     getAllBranches,
     deleteBranch,
     getTodayCommitCount,
-    squashTodayCommits
+    squashTodayCommits,
+    getTodayNetWords
 };
