@@ -43,6 +43,7 @@ function getBackupOptions() {
   const options = {
     providers: {
       cloud: [],
+      local: localBackupPath,
     },
   };
 

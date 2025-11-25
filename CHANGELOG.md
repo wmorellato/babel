@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.0] - 2025-11-24
+
+### Added
+
+- Git management for stories. Every 300 words receive a new commit. Option to squash commits made on the same day.
+- Markdown comments.
+- Showing on status bar: words written on the current day.
+
 ## [1.8.0] - 2022-??-??
 
 ### Added

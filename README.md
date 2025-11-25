@@ -13,6 +13,175 @@ Babel is a Visual Studio Code extension for writers and developers. It helps you
 5. Create a new story. A *draft* version will be automatically created.
 6. Start writing.
 
+## Git-Based Versioning
+
+Babel now supports **two versioning modes**:
+
+- **Git-based versioning** (default if git is installed): Each story is a git repository, each version is a branch
+- **File-based versioning** (fallback): Traditional approach with separate markdown files per version
+
+### How Git Versioning Works
+
+When you create a new story with git available:
+
+1. A git repository is initialized in the story folder
+2. The initial version is created as a branch (e.g., `draft1`)
+3. Every save automatically stages changes
+4. When staged changes exceed 2000 characters, an auto-commit is created
+5. Switching versions checks out the corresponding branch
+6. All git operations happen automatically in the background
+
+### Benefits
+
+- **Accurate word tracking**: Net words calculated from git diffs (additions - deletions)
+- **Complete history**: Every change is tracked via git commits
+- **Branch safety**: Visual indicators and confirmations prevent wrong-branch commits
+- **Commit management**: Squash multiple daily commits into one to keep history clean
+
+### Status Bar Features
+
+When editing a git-based story, you'll see helpful indicators in the status bar:
+
+#### Branch Match Indicator
+
+Shows whether you're editing the correct git branch:
+
+- `✓ draft1` with green background = On correct branch
+- `⚠ draft1 (on draft2)` with red background = **Warning**: Editing wrong branch
+
+#### Daily Word Count
+
+Displays net words written today in real-time:
+
+- `📝 Today: +350 words` = Positive progress
+- `📝 Today: -50 words` = More deletions than additions
+- `📝 Today: 0 words` = No changes yet today
+
+The count includes all commits from today plus uncommitted changes.
+
+#### Commit Squashing
+
+When you have multiple commits from today, a squash button appears:
+
+- `🔀 Squash commits (13)` = Click to squash 13 commits into one
+
+**Auto-prompt on close**: If you have more than 3 commits when closing VSCode, you'll be prompted to squash them.
+
+### Branch Safety Features
+
+#### Save Confirmation
+
+If you try to save while on the wrong branch, Babel will show a modal warning:
+
+```
+You are editing version "Draft 1" (draft1) but git is on branch "draft2".
+There are uncommitted changes on draft2. Do you want to commit to draft2?
+
+[Commit to draft2]  [Cancel]
+```
+
+Choose **Cancel** to prevent accidental commits to the wrong branch.
+
+#### Auto-Commit on Transitions
+
+To prevent data loss, Babel automatically commits staged changes when:
+
+- Closing a document
+- Switching to another version
+- The staged changes represent actual work (word count > 0)
+
+### Migration to Git
+
+Existing file-based stories can be migrated to git using the migration script in `scripts/migrate-to-git.js`:
+
+```bash
+# Dry run (shows what would happen)
+node scripts/migrate-to-git.js --dry-run
+
+# Migrate all stories
+node scripts/migrate-to-git.js
+
+# Migrate specific story
+node scripts/migrate-to-git.js --story-id <story-id>
+
+# Skip backup creation
+node scripts/migrate-to-git.js --no-backup
+```
+
+The script will:
+1. Initialize a git repository for each story
+2. Create branches for each version
+3. Commit existing content
+4. Update the database with git metadata
+5. Create a backup before migration (unless `--no-backup`)
+
+## Markdown Comments Feature
+
+This extension now supports inline comments in markdown files, similar to Google Docs!
+
+### Features
+
+#### Add Comments
+- Select any text in a markdown file
+- Right-click and select "Add Comment" or press `Ctrl+Shift+M` (Mac: `Cmd+Shift+M`)
+- Enter your comment in the input box
+- The selected text will be tagged with `[a]`, `[b]`, `[c]`, etc.
+
+#### View Comments
+- Hover over any `[x]` tag to see the comment
+- The hover popup shows:
+  - The original selected text
+  - The comment text
+  - Edit and Delete buttons
+
+#### Edit Comments
+- Hover over a comment tag and click "Edit"
+- Or place cursor on a tag and use the command palette: "Comments: Edit Comment"
+- Update the comment text
+
+#### Delete Comments
+- Hover over a comment tag and click "Delete"
+- Or place cursor on a tag and use the command palette: "Comments: Delete Comment"
+- Confirm the deletion
+
+#### Auto-cleanup
+- Orphan tags (comments without inline references) are automatically removed when you save the file
+
+### Comment Format
+
+Comments follow the Google Docs export format:
+
+```markdown
+This is some text with a comment[a] and another one[b].
+
+More text here.
+
+
+
+
+[a]This is the first comment
+>>This is some text with a comment
+
+[b]This is the second comment
+>>and another one
+```
+
+The `>>` prefix stores the originally selected text for reference.
+
+### Example Usage
+
+1. Open a markdown file
+2. Select text: "He swirled his glass"
+3. Right-click → "Add Comment"
+4. Enter: "Great imagery!"
+5. Result: "He swirled his glass[a]"
+
+At the end of the document:
+```
+[a]Great imagery!
+>>He swirled his glass
+```
+
 ## Exporting
 
 > Please, review the output .docx file to fix any badly formatted text and to insert missing information about yourself.
@@ -66,6 +235,40 @@ To enable Google Drive integration, you have to set the `stories.backup.cloudBac
 Added a new view that displays how many words were written on each day, and for which stories. Using the new [Webview API](https://code.visualstudio.com/api/extension-guides/webview) and also the awesome [Calendar heatmap graph](https://github.com/g1eb/calendar-heatmap) library. Below is an example for this view.
 
 ![](images/img2.png)
+
+**Git-based tracking**: For git-based stories, word counts are calculated using git diffs, providing accurate net word counts (additions minus deletions). This means rewrites and edits are properly reflected in your activity statistics.
+
+## Technical Improvements
+
+### VSCode Git Extension Optimization
+
+Babel automatically configures VSCode workspace settings to prevent the built-in Git extension from monitoring all story repositories, which could cause performance issues with many stories:
+
+- Sets `git.autoRepositoryDetection` to `'openEditors'`
+- Adds file watcher exclusions for `.git` directories
+
+These settings are configured automatically when Babel activates. This prevents listener leaks and reduces CPU usage when working with many git-based stories.
+
+### Cleanup Utilities
+
+A cleanup script is available to remove orphaned database entries:
+
+```bash
+# Dry run (shows what would be removed)
+node scripts/cleanup-dangling.js --dry-run
+
+# Remove orphaned entries
+node scripts/cleanup-dangling.js
+
+# Skip backup creation
+node scripts/cleanup-dangling.js --no-backup
+```
+
+The script checks for:
+- Stories with missing directories
+- Versions with missing files or branches
+- Activity entries for non-existent stories
+- Creates a backup before making changes (unless `--no-backup`)
 
 ### Markdown metadata
 

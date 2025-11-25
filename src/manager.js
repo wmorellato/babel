@@ -5,12 +5,18 @@ const rimrafSync = require('rimraf').sync;
 const { BabelDb } = require('./database');
 const { BackupManager } = require('./backup');
 const Errors = require('./errors');
+const gitUtils = require('./git-utils');
 
 const Version = {
   DRAFT: 'draft',
   REVISION: 'revision',
   TRANSLATION: 'translation',
   CUSTOM: 'other', // to be defined by the user later
+};
+
+const VersioningMode = {
+  GIT: 'git',
+  FILE: 'file',
 };
 
 class Manager {
@@ -64,11 +70,15 @@ class Manager {
    */
   createNewStory(title) {
     // TODO: implement the option to create random titles
+    // Determine versioning mode: git if available, otherwise file-based
+    const versioningMode = gitUtils.isGitAvailable() ? VersioningMode.GIT : VersioningMode.FILE;
+
     const storyObj = {
       title: title || 'New story',
       created: Date.now(),
       submissionHistory: {},
       versions: [],
+      versioningMode: versioningMode,
     };
 
     const storyDbObj = this.db.insertStory(storyObj);
@@ -77,13 +87,42 @@ class Manager {
       throw new Error(Errors.STORY_INSERTION_FAILED);
     }
 
-    this.createStoryDirectory(storyDbObj.id);
-    const versionDbObj = this.createNewVersion(storyDbObj.id, Version.DRAFT);
+    const storyDir = this.createStoryDirectory(storyDbObj.id);
 
-    return {
-      story: storyDbObj,
-      version: versionDbObj,
-    };
+    // Initialize git repository if using git mode
+    if (versioningMode === VersioningMode.GIT) {
+      const initialBranch = 'draft1';
+      gitUtils.initGitRepo(storyDir, initialBranch);
+
+      // Create the initial draft file
+      const draftFilename = 'draft.md';
+      gitUtils.createAndCommitFile(storyDir, draftFilename, '');
+
+      // Create version in database
+      const versionObj = {
+        storyId: storyDbObj.id,
+        name: Version.DRAFT,
+        wordCount: 0,
+        created: Date.now(),
+        statistics: {},
+        branch: initialBranch,
+      };
+
+      this.db.insertVersion(storyDbObj.id, versionObj);
+
+      return {
+        story: storyDbObj,
+        version: versionObj,
+      };
+    } else {
+      // Use file-based versioning
+      const versionDbObj = this.createNewVersion(storyDbObj.id, Version.DRAFT);
+
+      return {
+        story: storyDbObj,
+        version: versionDbObj,
+      };
+    }
   }
 
   /**
@@ -95,25 +134,63 @@ class Manager {
    * @return {Object} the version object just created
    */
   createNewVersion(storyId, versionName) {
-    const normalizedVersionName = utils.normalizeFilename(versionName);
-    const versionPath = path.join(this.workspaceDirectory, storyId, normalizedVersionName + '.md');
+    const story = this.db.getStoryById(storyId);
 
-    if (fs.existsSync(versionPath)) {
-      throw new Error(Errors.VERSION_ALREADY_EXISTS_ERROR);
+    if (!story) {
+      throw new Error(Errors.STORY_NOT_FOUND);
     }
 
-    const versionObj = {
-      storyId,
-      name: versionName,
-      wordCount: 0,
-      created: Date.now(),
-      statistics: {},
-    };
+    const normalizedVersionName = utils.normalizeFilename(versionName);
+    const storyDir = path.join(this.workspaceDirectory, storyId);
+    const versionPath = path.join(storyDir, normalizedVersionName + '.md');
 
-    this.db.insertVersion(storyId, versionObj);
-    fs.writeFileSync(versionPath, '');
+    // Check versioning mode
+    if (story.versioningMode === VersioningMode.GIT) {
+      // Git-based versioning: create a new branch
+      const branchName = normalizedVersionName;
 
-    return versionObj;
+      // Check if branch already exists
+      const existingBranches = gitUtils.getAllBranches(storyDir);
+      if (existingBranches.includes(branchName)) {
+        throw new Error(Errors.VERSION_ALREADY_EXISTS_ERROR);
+      }
+
+      // Create new branch from current branch
+      gitUtils.createBranch(storyDir, branchName);
+
+      // Create version in database
+      const versionObj = {
+        storyId,
+        name: versionName,
+        wordCount: 0,
+        created: Date.now(),
+        statistics: {},
+        branch: branchName,
+      };
+
+      this.db.insertVersion(storyId, versionObj);
+      gitUtils.createAndCommitFile(storyDir, normalizedVersionName + '.md', '');
+
+      return versionObj;
+    } else {
+      // File-based versioning: create a new file
+      if (fs.existsSync(versionPath)) {
+        throw new Error(Errors.VERSION_ALREADY_EXISTS_ERROR);
+      }
+
+      const versionObj = {
+        storyId,
+        name: versionName,
+        wordCount: 0,
+        created: Date.now(),
+        statistics: {},
+      };
+
+      this.db.insertVersion(storyId, versionObj);
+      fs.writeFileSync(versionPath, '');
+
+      return versionObj;
+    }
   }
 
   /**
@@ -196,27 +273,63 @@ class Manager {
    * @param {Boolean} renameFiles if this  should rename the files as well.
    */
   editVersionName(versionObj, newName, renameFiles) {
+    const story = this.db.getStoryById(versionObj.storyId);
+
+    if (!story) {
+      throw new Error(Errors.STORY_NOT_FOUND);
+    }
+
+    const storyDir = path.join(this.workspaceDirectory, versionObj.storyId);
     const oldPath = this.getVersionPath(versionObj.storyId, utils.normalizeFilename(versionObj.name));
     const pathParts = utils.splitPathFile(oldPath);
     const newPath = path.join(pathParts[0], utils.normalizeFilename(newName) + '.md');
 
-    if (fs.existsSync(newPath)) {
-      throw new Error(Errors.VERSION_ALREADY_EXISTS_ERROR);
-    }
+    // Check versioning mode
+    if (story.versioningMode === VersioningMode.GIT && versionObj.branch) {
+      // Git-based versioning: rename the branch
+      const newBranchName = utils.normalizeFilename(newName);
 
-    const updateInfo = {
-      id: versionObj.id,
-      name: newName,
-    };
+      // Check if new branch name already exists
+      const existingBranches = gitUtils.getAllBranches(storyDir);
+      if (existingBranches.includes(newBranchName)) {
+        throw new Error(Errors.VERSION_ALREADY_EXISTS_ERROR);
+      }
 
-    const newObj = this.db.updateVersionInfo(updateInfo);
+      // Rename the branch
+      gitUtils.renameBranch(storyDir, versionObj.branch, newBranchName);
 
-    if (!newObj) {
-      throw new Error(Errors.VERSION_DB_UPDATE_ERROR);
-    }
+      // Update database
+      const updateInfo = {
+        id: versionObj.id,
+        name: newName,
+        branch: newBranchName,
+      };
 
-    if (renameFiles) {
-      fs.renameSync(oldPath, newPath);
+      const newObj = this.db.updateVersionInfo(updateInfo);
+
+      if (!newObj) {
+        throw new Error(Errors.VERSION_DB_UPDATE_ERROR);
+      }
+    } else {
+      // File-based versioning: rename the file
+      if (fs.existsSync(newPath)) {
+        throw new Error(Errors.VERSION_ALREADY_EXISTS_ERROR);
+      }
+
+      const updateInfo = {
+        id: versionObj.id,
+        name: newName,
+      };
+
+      const newObj = this.db.updateVersionInfo(updateInfo);
+
+      if (!newObj) {
+        throw new Error(Errors.VERSION_DB_UPDATE_ERROR);
+      }
+
+      if (renameFiles) {
+        fs.renameSync(oldPath, newPath);
+      }
     }
   }
 
@@ -228,6 +341,8 @@ class Manager {
    *    this version will be removed. The files will be kept.
    */
   removeVersion(storyId, versionObj, removeFiles) {
+    const story = this.db.getStoryById(storyId);
+
     try {
       this.db.deleteVersion(storyId, versionObj.id);
     } catch (e) {
@@ -237,15 +352,28 @@ class Manager {
       }
     }
 
-    const versionPath = this.getVersionPath(storyId, utils.normalizeFilename(versionObj.name));
+    // Handle git-based versioning
+    if (story && story.versioningMode === VersioningMode.GIT && versionObj.branch) {
+      const storyDir = path.join(this.workspaceDirectory, storyId);
 
-    if (removeFiles) {
-      fs.unlinkSync(versionPath);
+      if (removeFiles) {
+        // Delete the branch (force delete)
+        gitUtils.deleteBranch(storyDir, versionObj.branch, true);
+      }
+      // For git-based stories, we don't need to handle the "else" case
+      // because the branch can remain even if we're not "removing files"
     } else {
-      // if the files are not removed, I still need to
-      // rename it, otherwise it will not be possible to
-      // create a version with the same name again
-      fs.renameSync(versionPath, versionPath + `.${Date.now()}.deleted`);
+      // Handle file-based versioning
+      const versionPath = this.getVersionPath(storyId, utils.normalizeFilename(versionObj.name));
+
+      if (removeFiles) {
+        fs.unlinkSync(versionPath);
+      } else {
+        // if the files are not removed, I still need to
+        // rename it, otherwise it will not be possible to
+        // create a version with the same name again
+        fs.renameSync(versionPath, versionPath + `.${Date.now()}.deleted`);
+      }
     }
   }
 
@@ -289,7 +417,7 @@ class Manager {
       return false;
     }
 
-    if (path.basename(documentPath) === 'babel.json') {
+    if (path.basename(documentPath).endsWith('.md') === false) {
       return false;
     }
 
@@ -304,5 +432,6 @@ class Manager {
 
 module.exports = {
   Version,
+  VersioningMode,
   Manager,
 };

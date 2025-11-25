@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const resources = require('./vscode/resource-manager');
 const { isBabelWorkspace, WorkspaceManager } = require('./vscode/workspace');
+const CommentProvider = require('./vscode/comment-provider');
 
 /**
  * This is to block any command when the current workspace is not a Babel
@@ -21,12 +22,17 @@ function redirectCommandsToError(context) {
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeStory', showError));
   context.subscriptions.push(vscode.commands.registerCommand('babel.refreshExplorer', showError));
   context.subscriptions.push(vscode.commands.registerCommand('babel.insertMetadata', showError));
+  context.subscriptions.push(vscode.commands.registerCommand('babel.squashTodayCommits', showError));
 }
 
 /**
- * @param {vscode.ExtensionContext} context 
+ * @param {vscode.ExtensionContext} context
  */
 async function activate(context) {
+  // Activate comment provider for all markdown files
+  const commentProvider = new CommentProvider();
+  commentProvider.activate(context);
+
   if (!vscode.workspace.workspaceFolders) {
     return;
   }
@@ -53,6 +59,7 @@ async function activate(context) {
   vscode.workspace.onDidChangeTextDocument((documentChangedEvent) => workspace.onDidDocumentChange(documentChangedEvent));
   vscode.workspace.onDidCloseTextDocument((textDocument) => workspace.onDidCloseDocument(textDocument));
   vscode.workspace.onWillSaveTextDocument((willSaveEvent) => workspace.onWillSaveDocument(willSaveEvent));
+  vscode.workspace.onDidSaveTextDocument((textDocument) => workspace.onDidSaveTextDocument(textDocument));
 
   // commands
   context.subscriptions.push(vscode.commands.registerCommand('babel.newStory', () => workspace.newStoryCommand()));
@@ -66,13 +73,23 @@ async function activate(context) {
   context.subscriptions.push(vscode.commands.registerCommand('babel.removeStory', (node) => workspace.removeStory(node)));
   context.subscriptions.push(vscode.commands.registerCommand('babel.refreshExplorer', () => workspace.updateViews()));
   context.subscriptions.push(vscode.commands.registerCommand('babel.insertMetadata', () => workspace.insertMetadata()));
+  context.subscriptions.push(vscode.commands.registerCommand('babel.squashTodayCommits', () => workspace.squashTodayCommitsCommand()));
 
   vscode.languages.registerHoverProvider('markdown', { provideHover: (document, position, token) => workspace.wordCountHoverProvider(document, position, token) });
+
+  // Store workspace reference for deactivate
+  context.workspaceInstance = workspace;
 }
 
 exports.activate = activate;
 
-function deactivate() { }
+async function deactivate() {
+  // Get workspace instance from context if available
+  const workspace = this.workspaceInstance;
+  if (workspace) {
+    await workspace.checkSquashOnClose();
+  }
+}
 
 module.exports = {
   activate,
