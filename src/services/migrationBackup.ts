@@ -30,11 +30,10 @@ export class MigrationBackup {
    * Returns the backup path
    */
   moveToBackup(): string {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
     const backupDir = path.join(this.sourceDir, '.babel', 'backups')
     fs.mkdirSync(backupDir, { recursive: true })
 
-    const backupPath = path.join(backupDir, `babel-backup-${timestamp}`)
+    const backupPath = path.join(backupDir, `babel-v1-backup`)
     fs.mkdirSync(backupPath, { recursive: true })
 
     // Move babel.json to backup

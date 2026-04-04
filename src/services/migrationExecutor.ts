@@ -101,7 +101,7 @@ export const migrationExecutor = {
             commitsCreated++
           } catch (error) {
             migrationLogger.error(
-              `Failed to migrate version ${version.name} in Phase A`,
+              `Failed to migrate version ${version.name} in Phase A for ${story.title}: ${error instanceof Error ? error.message : String(error)}`,
               {
                 storyId: story.v1Id,
                 versionName: version.name,
@@ -241,7 +241,7 @@ export const migrationExecutor = {
             commitsCreated++
           } catch (error) {
             migrationLogger.error(
-              `Failed to migrate version ${version.name} in Phase B`,
+              `Failed to migrate version ${version.name} in Phase B for ${story.title}: ${error instanceof Error ? error.message : String(error)}`,
               {
                 storyId: story.v1Id,
                 versionName: version.name,
