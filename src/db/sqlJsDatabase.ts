@@ -189,6 +189,7 @@ export class SqlJsDatabase implements IDatabase {
           display_name TEXT NOT NULL,
           type TEXT NOT NULL,
           icon_name TEXT DEFAULT 'book',
+          current_word_count INTEGER NOT NULL DEFAULT 0,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
         )

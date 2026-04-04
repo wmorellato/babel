@@ -9,14 +9,55 @@ export const migrateV3: Migration = {
 
   up: (db) => {
     // Add current_word_count column to stories table with default 0
+    // Try ALTER TABLE first, but fall back to table recreation if needed
     try {
       db.exec(`
         ALTER TABLE stories ADD COLUMN current_word_count INTEGER NOT NULL DEFAULT 0
       `);
     } catch (e: any) {
-      // Column may already exist (idempotent)
-      if (!e.message.includes('duplicate column name')) {
-        throw e;
+      const errorMsg = e.message || String(e);
+
+      // If column already exists or other expected errors, skip
+      if (errorMsg.includes('duplicate column') || errorMsg.includes('current_word_count already exists')) {
+        // Column already exists, continue
+      } else {
+        // For other errors (e.g., sql.js doesn't support ALTER TABLE),
+        // recreate the table with the new column
+        db.exec(`
+          CREATE TABLE stories_backup AS
+          SELECT id, display_name, type, icon_name, created_at, updated_at
+          FROM stories
+        `);
+
+        db.exec('DROP TABLE stories');
+
+        db.exec(`
+          CREATE TABLE stories (
+            id TEXT PRIMARY KEY,
+            display_name TEXT NOT NULL,
+            type TEXT NOT NULL,
+            icon_name TEXT DEFAULT 'book',
+            current_word_count INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+          )
+        `);
+
+        db.exec(`
+          INSERT INTO stories (id, display_name, type, icon_name, created_at, updated_at, current_word_count)
+          SELECT id, display_name, type, icon_name, created_at, updated_at, 0
+          FROM stories_backup
+        `);
+
+        db.exec('DROP TABLE stories_backup');
+
+        // Recreate indexes
+        db.exec(`
+          CREATE INDEX IF NOT EXISTS idx_stories_type ON stories(type)
+        `);
+        db.exec(`
+          CREATE INDEX IF NOT EXISTS idx_stories_icon_name ON stories(icon_name)
+        `);
       }
     }
 
