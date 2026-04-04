@@ -33,12 +33,17 @@ export class IconRegistry {
       { name: 'note', label: 'Note', description: 'Essay or article', category: 'story' },
       { name: 'history', label: 'History', description: 'Older draft', category: 'story' },
       { name: 'bookmark', label: 'Bookmark', description: 'Favorite version', category: 'story' },
-
+      { name: 'symbol-event', label: 'Flash fiction', description: 'Short narrative', category: 'story' },
+      
       // Creative/Theme (category: 'creative')
       { name: 'lightbulb', label: 'Lightbulb', description: 'Idea or draft', category: 'creative' },
-      { name: 'rocket', label: 'Rocket', description: 'New story', category: 'creative' },
+      { name: 'rocket', label: 'Rocket', description: 'Sci-fi', category: 'creative' },
+      { name: 'robot', label: 'Robot', description: 'Sci-fi', category: 'creative' },
+      { name: 'telescope', label: 'Telescope', description: 'Sci-fi', category: 'creative' },
       { name: 'star', label: 'Star', description: 'Published or polished', category: 'creative' },
       { name: 'archive', label: 'Archive', description: 'Completed work', category: 'creative' },
+      { name: 'search', label: 'Detective', description: 'Mystery or investigation', category: 'creative' },
+      { name: 'briefcase', label: 'Detective', description: 'Mystery or investigation', category: 'creative' },
       { name: 'folder-library', label: 'Library Folder', description: 'Archive collection', category: 'creative' },
 
       // Emotional/Tone (category: 'emotional')
