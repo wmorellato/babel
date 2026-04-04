@@ -1,491 +1,510 @@
 {
-  "name": "babel",
-  "displayName": "Babel",
-  "description": "A filesystem-first VSCode extension for managing story projects with git versioning",
-  "version": "2.0.0",
-  "publisher": "wes",
-  "engines": {
-    "vscode": "^1.90.0",
-    "node": ">=18.0.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "babel-explorer",
-          "title": "Babel Stories",
-          "icon": "resources/icons/babel.svg"
-        }
-      ]
-    },
-    "views": {
-      "babel-explorer": [
-        {
-          "id": "babelStories",
-          "name": "Stories"
-        },
-        {
-          "id": "babelBackups",
-          "name": "Backups",
-          "icon": "$(package)"
-        }
-      ]
-    },
-    "commands": [
-      {
-        "command": "babel.newStory",
-        "title": "Babel: New Story",
-        "icon": "$(add)"
-      },
-      {
-        "command": "babel.newVersion",
-        "title": "Babel: New Version"
-      },
-      {
-        "command": "babel.switchVersion",
-        "title": "Babel: Switch Version"
-      },
-      {
-        "command": "babel.deleteVersion",
-        "title": "Babel: Delete Version"
-      },
-      {
-        "command": "babel.renameStory",
-        "title": "Babel: Rename Story"
-      },
-      {
-        "command": "babel.renameStoryTree",
-        "title": "Rename Story"
-      },
-      {
-        "command": "babel.changeVersionTree",
-        "title": "Change Version"
-      },
-      {
-        "command": "babel.createVersionTree",
-        "title": "Create Version"
-      },
-      {
-        "command": "babel.deleteStory",
-        "title": "Delete Story"
-      },
-      {
-        "command": "babel.changeIcon",
-        "title": "Change Icon"
-      },
-      {
-        "command": "babel.refreshStories",
-        "title": "Refresh Stories"
-      },
-      {
-        "command": "babel.exportStory",
-        "title": "Export Story to DOCX",
-        "category": "Babel",
-        "description": "Export current story to DOCX format for submission or sharing",
-        "icon": "$(arrow-down)"
-      },
-      {
-        "command": "babel.sendToKindle",
-        "title": "Send Story to Kindle",
-        "category": "Babel",
-        "description": "Export current story to DOCX and send to Kindle device via email",
-        "icon": "$(mail)"
-      },
-      {
-        "command": "babel.viewActivity",
-        "title": "Babel: View Activity"
-      },
-      {
-        "command": "babel.backupNow",
-        "title": "Babel: Backup Now"
-      },
-      {
-        "command": "babel.restoreBackup",
-        "title": "Babel: Restore Backup"
-      },
-      {
-        "command": "babel.authorizeDropbox",
-        "title": "Babel: Authorize Dropbox"
-      },
-      {
-        "command": "babel.toggleCloudBackup",
-        "title": "Babel: Toggle Cloud Backup"
-      },
-      {
-        "command": "babel.toggleLocalBackup",
-        "title": "Babel: Toggle Local Backup"
-      },
-      {
-        "command": "babel.deleteBackup",
-        "title": "Babel: Delete Backup"
-      },
-      {
-        "command": "babel.enableBackup",
-        "title": "Babel: Enable Backup"
-      },
-      {
-        "command": "babel.disableBackup",
-        "title": "Babel: Disable Backup"
-      },
-      {
-        "command": "babel.revokeDropboxToken",
-        "title": "Babel: Revoke Dropbox Token",
-        "icon": "$(trash)"
-      },
-      {
-        "command": "babel.openBackupFolder",
-        "title": "Babel: Open Backup Folder",
-        "icon": "$(folder-opened)"
-      },
-      {
-        "command": "babel.applyColor.red",
-        "title": "Babel: Apply Red Color",
-        "icon": "$(circle-filled)"
-      },
-      {
-        "command": "babel.applyColor.blue",
-        "title": "Babel: Apply Blue Color",
-        "icon": "$(circle-filled)"
-      },
-      {
-        "command": "babel.applyColor.green",
-        "title": "Babel: Apply Green Color",
-        "icon": "$(circle-filled)"
-      },
-      {
-        "command": "babel.applyColor.orange",
-        "title": "Babel: Apply Orange Color",
-        "icon": "$(circle-filled)"
-      },
-      {
-        "command": "babel.applyColor.yellow",
-        "title": "Babel: Apply Yellow Color",
-        "icon": "$(circle-filled)"
-      },
-      {
-        "command": "babel.applyColor.purple",
-        "title": "Babel: Apply Purple Color",
-        "icon": "$(circle-filled)"
-      },
-      {
-        "command": "babel.applyColor.cyan",
-        "title": "Babel: Apply Cyan Color",
-        "icon": "$(circle-filled)"
-      },
-      {
-        "command": "babel.applyColor.pink",
-        "title": "Babel: Apply Pink Color",
-        "icon": "$(circle-filled)"
-      },
-      {
-        "command": "babel.removeColor",
-        "title": "Babel: Remove Color",
-        "icon": "$(circle-outline)"
-      },
-      {
-        "command": "babel.addFile",
-        "title": "Add File to Story",
-        "category": "Babel",
-        "description": "Add a new markdown file to a story",
-        "icon": "$(new-file)"
-      },
-      {
-        "command": "babel.addChapter",
-        "title": "Add Chapter",
-        "category": "Babel",
-        "description": "Add a new chapter to a Novel or Novella",
-        "icon": "$(new-collection)"
-      },
-      {
-        "command": "babel.deleteFile",
-        "title": "Delete File",
-        "category": "Babel",
-        "description": "Delete a file from a story"
-      },
-      {
-        "command": "babel.migrate",
-        "title": "Babel: Migrate from v1 to v2",
-        "category": "Babel",
-        "description": "Manually trigger migration from Babel v1 (JSON) to v2 (SQLite)"
-      }
+    "name": "babel",
+    "displayName": "Babel",
+    "publisher": "wmorellato",
+    "description": "An extension for writers to create and manage stories using VSCode.",
+    "version": "2.0.0",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "keywords": [
+        "writing",
+        "short-story",
+        "novel",
+        "novella",
+        "essay",
+        "story"
     ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "babel.newStory",
-          "when": "view == babelStories",
-          "group": "navigation"
-        },
-        {
-          "command": "babel.refreshStories",
-          "when": "view == babelStories",
-          "group": "navigation"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "babel.renameStoryTree",
-          "when": "viewItem =~ /^babelStory:/",
-          "group": "1_modification"
-        },
-        {
-          "command": "babel.changeVersionTree",
-          "when": "viewItem =~ /^babelStory:/",
-          "group": "1_modification"
-        },
-        {
-          "command": "babel.createVersionTree",
-          "when": "viewItem =~ /^babelStory:/",
-          "group": "1_modification"
-        },
-        {
-          "command": "babel.changeIcon",
-          "when": "viewItem =~ /^babelStory:/",
-          "group": "1_modification"
-        },
-        {
-          "command": "babel.deleteStory",
-          "when": "viewItem =~ /^babelStory:/",
-          "group": "3_deletion"
-        },
-        {
-          "command": "babel.enableBackup",
-          "when": "viewItem == providerGroup.local && !config.babel.backup.enabled",
-          "group": "inline"
-        },
-        {
-          "command": "babel.disableBackup",
-          "when": "viewItem == providerGroup.local && config.babel.backup.enabled",
-          "group": "inline"
-        },
-        {
-          "command": "babel.enableBackup",
-          "when": "viewItem == providerGroup.cloud && !config.babel.backup.dropbox.enabled",
-          "group": "inline"
-        },
-        {
-          "command": "babel.authorizeDropbox",
-          "when": "viewItem == providerGroup.cloud && config.babel.backup.dropbox.enabled && !config.babel.backup.dropbox.authorized",
-          "group": "inline"
-        },
-        {
-          "command": "babel.revokeDropboxToken",
-          "when": "viewItem == providerGroup.cloud && config.babel.backup.dropbox.enabled && config.babel.backup.dropbox.authorized",
-          "group": "inline"
-        },
-        {
-          "command": "babel.disableBackup",
-          "when": "viewItem == providerGroup.cloud && config.babel.backup.dropbox.enabled",
-          "group": "inline"
-        },
-        {
-          "command": "babel.openBackupFolder",
-          "when": "viewItem == backup.local",
-          "group": "inline"
-        },
-        {
-          "command": "babel.addFile",
-          "when": "viewItem =~ /^babelStory:(short-story|essay)$/",
-          "group": "inline"
-        },
-        {
-          "command": "babel.addChapter",
-          "when": "viewItem =~ /^babelStory:(novel|novella)$/",
-          "group": "inline"
-        },
-        {
-          "command": "babel.exportStory",
-          "when": "viewItem =~ /^babelStory:/",
-          "group": "2_export"
-        },
-        {
-          "command": "babel.sendToKindle",
-          "when": "viewItem =~ /^babelStory:/",
-          "group": "2_export"
-        },
-        {
-          "command": "babel.deleteFile",
-          "when": "viewItem == babelFile",
-          "group": "3_deletion"
-        }
-      ]
+    "engines": {
+        "vscode": "^1.90.0",
+        "node": ">=18.0.0"
     },
-    "configuration": {
-      "title": "Babel",
-      "properties": {
-        "babel.backup.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable automatic backups"
+    "icon": "resources/logo-icon.png",
+    "galleryBanner": {
+        "color": "#36221b",
+        "theme": "dark"
+    },
+    "categories": [
+        "Other"
+    ],
+    "homepage": "https://github.com/wmorellato/babel",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/wmorellato/babel.git"
+    },
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "main": "./dist/extension.js",
+    "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "babel-explorer",
+                    "title": "Babel Stories",
+                    "icon": "resources/icons/babel.svg"
+                }
+            ]
         },
-        "babel.backup.schedule": {
-          "type": "string",
-          "enum": [
-            "disabled",
-            "hourly",
-            "daily",
-            "weekly"
-          ],
-          "default": "daily",
-          "description": "Backup frequency"
+        "views": {
+            "babel-explorer": [
+                {
+                    "id": "babelStories",
+                    "name": "Stories"
+                },
+                {
+                    "id": "babelBackups",
+                    "name": "Backups",
+                    "icon": "$(package)"
+                }
+            ]
         },
-        "babel.backup.time": {
-          "type": "string",
-          "default": "02:00",
-          "pattern": "^([0-1][0-9]|2[0-3]):[0-5][0-9]$",
-          "description": "Time to run daily backup (24-hour format, HH:mm)"
+        "commands": [
+            {
+                "command": "babel.newStory",
+                "title": "Babel: New Story",
+                "icon": "$(add)"
+            },
+            {
+                "command": "babel.newVersion",
+                "title": "Babel: New Version"
+            },
+            {
+                "command": "babel.switchVersion",
+                "title": "Babel: Switch Version"
+            },
+            {
+                "command": "babel.deleteVersion",
+                "title": "Babel: Delete Version"
+            },
+            {
+                "command": "babel.renameStory",
+                "title": "Babel: Rename Story"
+            },
+            {
+                "command": "babel.renameStoryTree",
+                "title": "Rename Story"
+            },
+            {
+                "command": "babel.changeVersionTree",
+                "title": "Change Version"
+            },
+            {
+                "command": "babel.createVersionTree",
+                "title": "Create Version"
+            },
+            {
+                "command": "babel.deleteStory",
+                "title": "Delete Story"
+            },
+            {
+                "command": "babel.changeIcon",
+                "title": "Change Icon"
+            },
+            {
+                "command": "babel.refreshStories",
+                "title": "Refresh Stories"
+            },
+            {
+                "command": "babel.exportStory",
+                "title": "Export Story to DOCX",
+                "category": "Babel",
+                "description": "Export current story to DOCX format for submission or sharing",
+                "icon": "$(arrow-down)"
+            },
+            {
+                "command": "babel.sendToKindle",
+                "title": "Send Story to Kindle",
+                "category": "Babel",
+                "description": "Export current story to DOCX and send to Kindle device via email",
+                "icon": "$(mail)"
+            },
+            {
+                "command": "babel.viewActivity",
+                "title": "Babel: View Activity"
+            },
+            {
+                "command": "babel.backupNow",
+                "title": "Babel: Backup Now"
+            },
+            {
+                "command": "babel.restoreBackup",
+                "title": "Babel: Restore Backup"
+            },
+            {
+                "command": "babel.authorizeDropbox",
+                "title": "Babel: Authorize Dropbox"
+            },
+            {
+                "command": "babel.toggleCloudBackup",
+                "title": "Babel: Toggle Cloud Backup"
+            },
+            {
+                "command": "babel.toggleLocalBackup",
+                "title": "Babel: Toggle Local Backup"
+            },
+            {
+                "command": "babel.deleteBackup",
+                "title": "Babel: Delete Backup"
+            },
+            {
+                "command": "babel.enableBackup",
+                "title": "Babel: Enable Backup"
+            },
+            {
+                "command": "babel.disableBackup",
+                "title": "Babel: Disable Backup"
+            },
+            {
+                "command": "babel.revokeDropboxToken",
+                "title": "Babel: Revoke Dropbox Token",
+                "icon": "$(trash)"
+            },
+            {
+                "command": "babel.openBackupFolder",
+                "title": "Babel: Open Backup Folder",
+                "icon": "$(folder-opened)"
+            },
+            {
+                "command": "babel.applyColor.red",
+                "title": "Babel: Apply Red Color",
+                "icon": "$(circle-filled)"
+            },
+            {
+                "command": "babel.applyColor.blue",
+                "title": "Babel: Apply Blue Color",
+                "icon": "$(circle-filled)"
+            },
+            {
+                "command": "babel.applyColor.green",
+                "title": "Babel: Apply Green Color",
+                "icon": "$(circle-filled)"
+            },
+            {
+                "command": "babel.applyColor.orange",
+                "title": "Babel: Apply Orange Color",
+                "icon": "$(circle-filled)"
+            },
+            {
+                "command": "babel.applyColor.yellow",
+                "title": "Babel: Apply Yellow Color",
+                "icon": "$(circle-filled)"
+            },
+            {
+                "command": "babel.applyColor.purple",
+                "title": "Babel: Apply Purple Color",
+                "icon": "$(circle-filled)"
+            },
+            {
+                "command": "babel.applyColor.cyan",
+                "title": "Babel: Apply Cyan Color",
+                "icon": "$(circle-filled)"
+            },
+            {
+                "command": "babel.applyColor.pink",
+                "title": "Babel: Apply Pink Color",
+                "icon": "$(circle-filled)"
+            },
+            {
+                "command": "babel.removeColor",
+                "title": "Babel: Remove Color",
+                "icon": "$(circle-outline)"
+            },
+            {
+                "command": "babel.addFile",
+                "title": "Add File to Story",
+                "category": "Babel",
+                "description": "Add a new markdown file to a story",
+                "icon": "$(new-file)"
+            },
+            {
+                "command": "babel.addChapter",
+                "title": "Add Chapter",
+                "category": "Babel",
+                "description": "Add a new chapter to a Novel or Novella",
+                "icon": "$(new-collection)"
+            },
+            {
+                "command": "babel.deleteFile",
+                "title": "Delete File",
+                "category": "Babel",
+                "description": "Delete a file from a story"
+            },
+            {
+                "command": "babel.migrate",
+                "title": "Babel: Migrate from v1 to v2",
+                "category": "Babel",
+                "description": "Manually trigger migration from Babel v1 (JSON) to v2 (SQLite)"
+            }
+        ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "babel.newStory",
+                    "when": "view == babelStories",
+                    "group": "navigation"
+                },
+                {
+                    "command": "babel.refreshStories",
+                    "when": "view == babelStories",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "babel.renameStoryTree",
+                    "when": "viewItem =~ /^babelStory:/",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "babel.changeVersionTree",
+                    "when": "viewItem =~ /^babelStory:/",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "babel.createVersionTree",
+                    "when": "viewItem =~ /^babelStory:/",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "babel.changeIcon",
+                    "when": "viewItem =~ /^babelStory:/",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "babel.deleteStory",
+                    "when": "viewItem =~ /^babelStory:/",
+                    "group": "3_deletion"
+                },
+                {
+                    "command": "babel.enableBackup",
+                    "when": "viewItem == providerGroup.local && !config.babel.backup.enabled",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.disableBackup",
+                    "when": "viewItem == providerGroup.local && config.babel.backup.enabled",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.enableBackup",
+                    "when": "viewItem == providerGroup.cloud && !config.babel.backup.dropbox.enabled",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.authorizeDropbox",
+                    "when": "viewItem == providerGroup.cloud && config.babel.backup.dropbox.enabled && !config.babel.backup.dropbox.authorized",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.revokeDropboxToken",
+                    "when": "viewItem == providerGroup.cloud && config.babel.backup.dropbox.enabled && config.babel.backup.dropbox.authorized",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.disableBackup",
+                    "when": "viewItem == providerGroup.cloud && config.babel.backup.dropbox.enabled",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.openBackupFolder",
+                    "when": "viewItem == backup.local",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.addFile",
+                    "when": "viewItem =~ /^babelStory:(short-story|essay)$/",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.addChapter",
+                    "when": "viewItem =~ /^babelStory:(novel|novella)$/",
+                    "group": "inline"
+                },
+                {
+                    "command": "babel.exportStory",
+                    "when": "viewItem =~ /^babelStory:/",
+                    "group": "2_export"
+                },
+                {
+                    "command": "babel.sendToKindle",
+                    "when": "viewItem =~ /^babelStory:/",
+                    "group": "2_export"
+                },
+                {
+                    "command": "babel.deleteFile",
+                    "when": "viewItem == babelFile",
+                    "group": "3_deletion"
+                }
+            ]
         },
-        "babel.backup.localPath": {
-          "type": "string",
-          "default": "${userHome}/.babel-backups",
-          "description": "Path to store local backups"
-        },
-        "babel.backup.retention": {
-          "type": "integer",
-          "default": 30,
-          "minimum": 1,
-          "maximum": 365,
-          "description": "Days to keep local backups"
-        },
-        "babel.backup.autoSave": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically backup on file save (in addition to scheduled backups)"
-        },
-        "babel.backup.dropbox.enabled": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable cloud backup to Dropbox"
-        },
-        "babel.backup.dropbox.authorized": {
-          "type": "boolean",
-          "default": false,
-          "description": "OAuth2 authorization status for Dropbox cloud backup (set automatically after successful authorization)"
-        },
-        "babel.backup.dropbox.clientId": {
-          "type": "string",
-          "default": "q0e787fjf1m58cj",
-          "description": "Dropbox OAuth2 Client ID"
-        },
-        "babel.backup.dropbox.redirectUri": {
-          "type": "string",
-          "default": "http://localhost:13678/oauth/callback",
-          "description": "OAuth2 redirect URI"
-        },
-        "babel.colors.palette": {
-          "type": "object",
-          "default": {
-            "red": "#FF9999",
-            "orange": "#FFCC99",
-            "yellow": "#FFEA80",
-            "green": "#99DD99",
-            "cyan": "#99CCFF",
-            "blue": "#6699FF",
-            "purple": "#DD99FF",
-            "pink": "#FFAADD"
-          },
-          "description": "Custom color palette for text highlighting (hex color values)"
-        },
-        "babel.export.authorName": {
-          "type": "string",
-          "default": "",
-          "description": "Author's full name for DOCX exports (used in Shunn manuscript formatting)"
-        },
-        "babel.export.authorByline": {
-          "type": "string",
-          "default": "",
-          "description": "Author's byline/pen name for DOCX exports"
-        },
-        "babel.export.address": {
-          "type": "string",
-          "default": "",
-          "description": "Author's street address for DOCX exports"
-        },
-        "babel.export.cityPostcode": {
-          "type": "string",
-          "default": "",
-          "description": "Author's city and postcode for DOCX exports"
-        },
-        "babel.export.phone": {
-          "type": "string",
-          "default": "",
-          "description": "Author's phone number for DOCX exports"
-        },
-        "babel.export.email": {
-          "type": "string",
-          "default": "",
-          "description": "Author's email address for DOCX exports"
-        },
-        "babel.export.pandocTemplatesPath": {
-          "type": "string",
-          "default": "",
-          "description": "Path to local pandoc-templates repository (required for DOCX exports via pandoc)"
-        },
-        "babel.sendToKindle.emailService": {
-          "type": "string",
-          "enum": [
-            "gmail",
-            "yahoo"
-          ],
-          "default": "",
-          "description": "Email service provider for sending to Kindle (gmail or yahoo)"
-        },
-        "babel.sendToKindle.senderEmail": {
-          "type": "string",
-          "default": "",
-          "description": "Email address that will send the story to Kindle (must have app-specific password configured)"
-        },
-        "babel.sendToKindle.recipientEmail": {
-          "type": "string",
-          "default": "",
-          "description": "Kindle-enabled email address to receive the story (usually yourname@kindle.com)"
+        "configuration": {
+            "title": "Babel",
+            "properties": {
+                "babel.backup.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable automatic backups"
+                },
+                "babel.backup.schedule": {
+                    "type": "string",
+                    "enum": [
+                        "disabled",
+                        "hourly",
+                        "daily",
+                        "weekly"
+                    ],
+                    "default": "daily",
+                    "description": "Backup frequency"
+                },
+                "babel.backup.time": {
+                    "type": "string",
+                    "default": "02:00",
+                    "pattern": "^([0-1][0-9]|2[0-3]):[0-5][0-9]$",
+                    "description": "Time to run daily backup (24-hour format, HH:mm)"
+                },
+                "babel.backup.localPath": {
+                    "type": "string",
+                    "default": "${userHome}/.babel-backups",
+                    "description": "Path to store local backups"
+                },
+                "babel.backup.retention": {
+                    "type": "integer",
+                    "default": 30,
+                    "minimum": 1,
+                    "maximum": 365,
+                    "description": "Days to keep local backups"
+                },
+                "babel.backup.autoSave": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically backup on file save (in addition to scheduled backups)"
+                },
+                "babel.backup.dropbox.enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable cloud backup to Dropbox"
+                },
+                "babel.backup.dropbox.authorized": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "OAuth2 authorization status for Dropbox cloud backup (set automatically after successful authorization)"
+                },
+                "babel.backup.dropbox.clientId": {
+                    "type": "string",
+                    "default": "q0e787fjf1m58cj",
+                    "description": "Dropbox OAuth2 Client ID"
+                },
+                "babel.backup.dropbox.redirectUri": {
+                    "type": "string",
+                    "default": "http://localhost:13678/oauth/callback",
+                    "description": "OAuth2 redirect URI"
+                },
+                "babel.colors.palette": {
+                    "type": "object",
+                    "default": {
+                        "red": "#FF9999",
+                        "orange": "#FFCC99",
+                        "yellow": "#FFEA80",
+                        "green": "#99DD99",
+                        "cyan": "#99CCFF",
+                        "blue": "#6699FF",
+                        "purple": "#DD99FF",
+                        "pink": "#FFAADD"
+                    },
+                    "description": "Custom color palette for text highlighting (hex color values)"
+                },
+                "babel.export.authorName": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Author's full name for DOCX exports (used in Shunn manuscript formatting)"
+                },
+                "babel.export.authorByline": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Author's byline/pen name for DOCX exports"
+                },
+                "babel.export.address": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Author's street address for DOCX exports"
+                },
+                "babel.export.cityPostcode": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Author's city and postcode for DOCX exports"
+                },
+                "babel.export.phone": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Author's phone number for DOCX exports"
+                },
+                "babel.export.email": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Author's email address for DOCX exports"
+                },
+                "babel.export.pandocTemplatesPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to local pandoc-templates repository (required for DOCX exports via pandoc)"
+                },
+                "babel.sendToKindle.emailService": {
+                    "type": "string",
+                    "enum": [
+                        "gmail",
+                        "yahoo"
+                    ],
+                    "default": "",
+                    "description": "Email service provider for sending to Kindle (gmail or yahoo)"
+                },
+                "babel.sendToKindle.senderEmail": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Email address that will send the story to Kindle (must have app-specific password configured)"
+                },
+                "babel.sendToKindle.recipientEmail": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Kindle-enabled email address to receive the story (usually yourname@kindle.com)"
+                }
+            }
         }
-      }
+    },
+    "bin": {
+        "migrate-v1-to-v2": "./dist/bin/migrate-v1-to-v2.js"
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile",
+        "test": "jest --maxWorkers=1 --logHeapUsage",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "migrate": "npm run compile && node dist/bin/migrate-v1-to-v2.js"
+    },
+    "devDependencies": {
+        "@types/google-apps-script": "^1.0.88",
+        "@types/jest": "^29.5.8",
+        "@types/node": "^20.10.5",
+        "@types/nodemailer": "^7.0.11",
+        "@types/sql.js": "^1.4.9",
+        "@types/tar": "^6.1.13",
+        "@types/uuid": "^10.0.0",
+        "@types/vscode": "^1.110.0",
+        "@vscode/test-electron": "^2.3.8",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.1.1",
+        "typescript": "^5.3.3"
+    },
+    "dependencies": {
+        "commander": "^14.0.2",
+        "dropbox": "^10.34.0",
+        "googleapis": "^118.0.0",
+        "nodemailer": "^6.9.0",
+        "simple-git": "^3.20.0",
+        "sql.js": "^1.14.1",
+        "tar": "^6.2.0",
+        "uuid": "^9.0.1",
+        "zod": "^4.3.6"
     }
-  },
-  "bin": {
-    "migrate-v1-to-v2": "./dist/bin/migrate-v1-to-v2.js"
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile",
-    "test": "jest --maxWorkers=1 --logHeapUsage",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "migrate": "npm run compile && node dist/bin/migrate-v1-to-v2.js"
-  },
-  "devDependencies": {
-    "@types/google-apps-script": "^1.0.88",
-    "@types/jest": "^29.5.8",
-    "@types/node": "^20.10.5",
-    "@types/nodemailer": "^7.0.11",
-    "@types/sql.js": "^1.4.9",
-    "@types/tar": "^6.1.13",
-    "@types/uuid": "^10.0.0",
-    "@types/vscode": "^1.110.0",
-    "@vscode/test-electron": "^2.3.8",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.1",
-    "typescript": "^5.3.3"
-  },
-  "dependencies": {
-    "commander": "^14.0.2",
-    "dropbox": "^10.34.0",
-    "googleapis": "^118.0.0",
-    "nodemailer": "^6.9.0",
-    "simple-git": "^3.20.0",
-    "sql.js": "^1.14.1",
-    "tar": "^6.2.0",
-    "uuid": "^9.0.1",
-    "zod": "^4.3.6"
-  }
 }
