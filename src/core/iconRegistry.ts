@@ -56,7 +56,7 @@ export class IconRegistry {
       // Additional variety (category: 'other')
       { name: 'edit', label: 'Edit', description: 'Work in progress', category: 'other' },
       { name: 'check', label: 'Check', description: 'Edited or reviewed', category: 'other' },
-      { name: 'clock', label: 'Clock', description: 'Time-based story', category: 'other' },
+      { name: 'clockface', label: 'Clock', description: 'Time-based story', category: 'other' },
     ];
 
     // Register icons and build category index
