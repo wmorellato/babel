@@ -14,7 +14,7 @@
         "story"
     ],
     "engines": {
-        "vscode": "^1.90.0",
+        "vscode": "^1.110.0",
         "node": ">=18.0.0"
     },
     "icon": "resources/logo-icon.png",
