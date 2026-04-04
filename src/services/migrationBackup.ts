@@ -31,9 +31,14 @@ export class MigrationBackup {
    */
   moveToBackup(): string {
     const backupDir = path.join(this.sourceDir, '.babel', 'backups')
-    fs.mkdirSync(backupDir, { recursive: true })
-
     const backupPath = path.join(backupDir, `babel-v1-backup`)
+
+    if (fs.existsSync(backupPath)) {
+      logger.info(`Backup already exists at ${backupPath}, skipping move`)
+      return backupPath
+    }
+
+    fs.mkdirSync(backupDir, { recursive: true })
     fs.mkdirSync(backupPath, { recursive: true })
 
     // Move babel.json to backup

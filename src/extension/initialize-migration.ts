@@ -78,7 +78,7 @@ export class MigrationInitializer {
           progress.report({ message: 'Creating backup (moving v1 data)...', increment: 0 })
           logger.info('Starting migration backup (moving v1 data)...')
           backupPath = await this.moveToBackupAsync(backup)
-          await uiHandler.showBackupProgress(backupPath)
+          uiHandler.showBackupProgress(backupPath)
           progress.report({ increment: 15 })
 
           // Phase 2: Validate - Now read from backup
