@@ -152,13 +152,14 @@ describe('Migration Flow Integration', () => {
     expect(branches.all).toContain('translation')
 
     // Check draft branch files
+    // For SHORT_STORY, migration writes to story.md, not draft.md
     await v2Git.checkout('draft')
-    expect(fs.existsSync(path.join(v2StoryDir, 'draft.md'))).toBe(true)
+    expect(fs.existsSync(path.join(v2StoryDir, 'story.md'))).toBe(true)
     expect(fs.existsSync(path.join(v2StoryDir, 'outline.md'))).toBe(true)
 
     // Check translation branch has inherited files
     await v2Git.checkout('translation')
-    expect(fs.existsSync(path.join(v2StoryDir, 'draft.md'))).toBe(true)
+    expect(fs.existsSync(path.join(v2StoryDir, 'story.md'))).toBe(true)
     expect(fs.existsSync(path.join(v2StoryDir, 'outline.md'))).toBe(true)
 
     // Verify database records were created

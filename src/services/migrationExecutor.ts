@@ -226,6 +226,7 @@ export const migrationExecutor = {
             const branchCreated = await this.migrateVersionPhaseB(
               version,
               story.v1Id,
+              story.type,
               plan.v1Source,
               storyDir,
               git,
@@ -630,6 +631,7 @@ export const migrationExecutor = {
   async migrateVersionPhaseB(
     version: VersionStagingPlan,
     storyId: string,
+    storyType: string,
     v1Source: string,
     v2StoryDir: string,
     git: SimpleGit,
@@ -677,13 +679,15 @@ export const migrationExecutor = {
       await git.checkout(version.targetBranch)
     }
 
-    // Always write to draft.md for standard versions
-    const targetPath = path.join(v2StoryDir, 'draft.md')
+    // Determine target filename based on story type
+    // SHORT_STORY and ESSAY use story.md; others use draft.md for standard versions
+    const targetFileName = (storyType === 'short-story' || storyType === 'essay') ? 'story.md' : 'draft.md'
+    const targetPath = path.join(v2StoryDir, targetFileName)
     fs.writeFileSync(targetPath, fileContent)
 
     // Commit
-    await git.add('draft.md')
-    await git.commit(`migrate: add draft.md from v1`)
+    await git.add(targetFileName)
+    await git.commit(`migrate: add ${targetFileName} from v1`)
 
     // Create version record
     const versionRepository = new VersionRepository(database)
