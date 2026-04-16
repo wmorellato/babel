@@ -33,6 +33,7 @@ import { AddFileCommand } from './core/commands/addFileCommand';
 import { AddChapterCommand } from './core/commands/addChapterCommand';
 import { DeleteFileCommand } from './core/commands/deleteFileCommand';
 import { StoryFileService } from './services/storyFileService';
+import { createWorkspaceHandler } from './extension/initialize-workspace';
 
 const logger = new Logger('Extension');
 
@@ -53,6 +54,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const workspacePath = workspaceFolders[0].uri.fsPath;
     const babelDir = path.join(workspacePath, '.babel');
     const databasePath = path.join(babelDir, 'babel.db');
+
+    // Register workspace creation command (always available, even if workspace not initialized)
+    context.subscriptions.push(
+      vscode.commands.registerCommand('babel.createWorkspace', () =>
+        createWorkspaceHandler(workspacePath, databasePath)
+      )
+    );
+
+    // Early exit if workspace not initialized
+    if (!fs.existsSync(databasePath)) {
+      logger.info('Babel workspace not initialized in this folder');
+      return;
+    }
 
     // Create .babel directory if it doesn't exist
     if (!fs.existsSync(babelDir)) {
