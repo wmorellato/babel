@@ -167,27 +167,59 @@ export class ColorDecorationManager {
   /**
    * Remove a decoration by character offset range
    * Also deletes the annotation from the database if it exists
+   *
+   * Removes any decoration that overlaps with the given range,
+   * even if the boundaries don't match exactly (e.g., if surrounding text was edited)
    */
   removeDecoration(startPos: number, endPos: number): void {
     try {
+      // First try exact match for backward compatibility
       const key = `${startPos},${endPos}`;
-      const decoration = this.decorations.get(key);
+      const exactDecoration = this.decorations.get(key);
 
-      if (decoration) {
-        decoration.type.dispose();
-        this.decorations.delete(key);
+      if (exactDecoration) {
+        this.removeDecorationByKey(key, exactDecoration);
+        return;
+      }
 
-        // Delete from database if repository is available and annotation was loaded from DB
-        if (this.repository && decoration.id) {
-          this.repository.deleteByRange(this.storyId, this.versionId, startPos, endPos);
-          logger.debug(`Deleted annotation from database at ${key}`);
+      // If no exact match, find any decoration that overlaps with the selection
+      let foundOverlapping = false;
+      for (const [decorationKey, decoration] of this.decorations.entries()) {
+        const decorationStart = this.editor.document.offsetAt(decoration.range.start);
+        const decorationEnd = this.editor.document.offsetAt(decoration.range.end);
+
+        // Check if ranges overlap
+        // Ranges overlap if: decoration.start < selection.end AND decoration.end > selection.start
+        if (decorationStart < endPos && decorationEnd > startPos) {
+          this.removeDecorationByKey(decorationKey, decoration);
+          foundOverlapping = true;
         }
+      }
 
-        logger.debug(`Removed decoration at ${key}`);
+      if (!foundOverlapping) {
+        logger.debug(`No decoration found at ${startPos},${endPos}`);
       }
     } catch (error) {
       logger.error('Failed to remove decoration', error);
     }
+  }
+
+  /**
+   * Helper to remove a decoration by key
+   * Disposes the decoration and deletes from database if needed
+   */
+  private removeDecorationByKey(key: string, decoration: DecorationType): void {
+    decoration.type.dispose();
+    this.decorations.delete(key);
+
+    // Delete from database if repository is available and annotation was loaded from DB
+    if (this.repository && decoration.id) {
+      const [startPos, endPos] = key.split(',').map(Number);
+      this.repository.deleteByRange(this.storyId, this.versionId, startPos, endPos);
+      logger.debug(`Deleted annotation from database at ${key}`);
+    }
+
+    logger.debug(`Removed decoration at ${key}`);
   }
 
   /**
