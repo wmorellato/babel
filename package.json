@@ -57,6 +57,12 @@
                 }
             ]
         },
+        "viewsWelcome": [
+            {
+                "view": "babelStories",
+                "contents": "No Babel workspace found in this folder.\n\nClick the button below to create a Babel workspace and start managing your stories.\n\n[Create Babel Workspace](command:babel.createWorkspace)"
+            }
+        ],
         "commands": [
             {
                 "command": "babel.newStory",
@@ -233,6 +239,11 @@
                 "title": "Babel: Migrate from v1 to v2",
                 "category": "Babel",
                 "description": "Manually trigger migration from Babel v1 (JSON) to v2 (SQLite)"
+            },
+            {
+                "command": "babel.createWorkspace",
+                "title": "Babel: Create Workspace",
+                "category": "Babel"
             }
         ],
         "menus": {
