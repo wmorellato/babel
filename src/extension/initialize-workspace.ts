@@ -8,11 +8,15 @@ const logger = new Logger('InitializeWorkspace');
 
 export async function createWorkspaceHandler(
   workspacePath: string,
-  databasePath: string,
-  context: vscode.ExtensionContext
+  databasePath: string
 ): Promise<void> {
   try {
     const babelDir = path.dirname(databasePath);
+
+    // Validate that workspace path exists and is writable
+    if (!fs.existsSync(workspacePath)) {
+      throw new Error(`Workspace path does not exist: ${workspacePath}`);
+    }
 
     // Create .babel directory if it doesn't exist
     if (!fs.existsSync(babelDir)) {
