@@ -60,7 +60,8 @@
         "viewsWelcome": [
             {
                 "view": "babelStories",
-                "contents": "No Babel workspace found in this folder.\n\nClick the button below to create a Babel workspace and start managing your stories.\n\n[Create Babel Workspace](command:babel.createWorkspace)"
+                "contents": "No Babel workspace found in this folder.\n\nClick the button below to create a Babel workspace and start managing your stories.\n\n[Create Babel Workspace](command:babel.createWorkspace)",
+                "when": "!babel.workspaceInitialized"
             }
         ],
         "commands": [

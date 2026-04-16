@@ -68,6 +68,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       return;
     }
 
+    // Set context to indicate workspace is initialized (used by viewsWelcome when clause)
+    await vscode.commands.executeCommand('setContext', 'babel.workspaceInitialized', true);
+
     // Create .babel directory if it doesn't exist
     if (!fs.existsSync(babelDir)) {
       fs.mkdirSync(babelDir, { recursive: true });
