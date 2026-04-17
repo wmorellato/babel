@@ -12,6 +12,7 @@ import { BackupDataCollector } from '../services/backupDataCollector';
 import { BabelStoriesTreeDataProvider } from '../views/storyTreeDataProvider';
 import { ListenerCoordinator } from './listenerCoordinator';
 import { Logger } from '../utils/logger';
+import { AutoCommitManager } from '../core/autoCommitManager';
 
 /**
  * Shared dependencies passed to all feature initialization functions.
@@ -42,6 +43,9 @@ export interface ExtensionDependencies {
 
   // UI provider created during feature initialization (optional, set after tree provider init)
   treeDataProvider?: BabelStoriesTreeDataProvider;
+
+  // Auto-commit manager (optional, set after auto-commit init)
+  autoCommitManager?: AutoCommitManager;
 
   // Listener coordination
   coordinator: ListenerCoordinator;

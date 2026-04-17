@@ -31,6 +31,8 @@ import { PandocExportService } from '../../services/export/pandocExportService';
 import { EmailService } from '../../services/email/emailService';
 import { VSCodeSecretStorage } from '../../services/credentialStorage';
 import { Logger } from '../../utils/logger';
+import { ForceCommitCommand } from './forceCommitCommand';
+import { AutoCommitManager } from '../autoCommitManager';
 
 const logger = new Logger('CommandRegistry');
 
@@ -49,6 +51,7 @@ export class CommandRegistry {
   private treeRefreshCallback?: () => void;
   private tokenManager?: TokenManager;
   private credentialStorage?: VSCodeSecretStorage;
+  private autoCommitManager?: AutoCommitManager;
 
   constructor(
     database: BabelDatabase,
@@ -56,7 +59,8 @@ export class CommandRegistry {
     workspaceRoot: string = '',
     treeRefreshCallback?: () => void,
     tokenManager?: TokenManager,
-    credentialStorage?: VSCodeSecretStorage
+    credentialStorage?: VSCodeSecretStorage,
+    autoCommitManager?: AutoCommitManager
   ) {
     this.database = database;
     this.gitRepository = gitRepository;
@@ -64,6 +68,7 @@ export class CommandRegistry {
     this.treeRefreshCallback = treeRefreshCallback;
     this.tokenManager = tokenManager;
     this.credentialStorage = credentialStorage;
+    this.autoCommitManager = autoCommitManager;
 
     // Initialize repositories
     this.storyRepository = new (require('../../db/storyRepository').StoryRepository)(
@@ -103,6 +108,7 @@ export class CommandRegistry {
     this.registerRefreshStories(context);
     this.registerAuthorizeDropbox(context);
     this.registerMigrate(context);
+    this.registerForceCommit(context);
 
     // Register backup toggle commands (enable/disable providers)
     registerBackupToggleCommands(context);
@@ -475,5 +481,29 @@ export class CommandRegistry {
     });
     context.subscriptions.push(disposable);
     logger.info('Registered babel.migrate');
+  }
+
+  /**
+   * babel.forceCommit - Force commit the current story, bypassing word count threshold
+   */
+  private registerForceCommit(context: vscode.ExtensionContext): void {
+    if (!this.autoCommitManager) {
+      logger.warn('AutoCommitManager not available, skipping forceCommit registration');
+      return;
+    }
+
+    const command = new ForceCommitCommand(this.autoCommitManager, this.workspaceRoot);
+    const disposable = vscode.commands.registerCommand('babel.forceCommit', async () => {
+      try {
+        const result = await command.execute();
+        if (!result.success) {
+          vscode.window.showErrorMessage(`Babel: ${result.message}`);
+        }
+      } catch (error) {
+        logger.error(`Command failed: ${error}`);
+      }
+    });
+    context.subscriptions.push(disposable);
+    logger.info('Registered babel.forceCommit');
   }
 }

@@ -7,7 +7,7 @@ import { ExtensionDependencies } from './types';
  * Depends on treeDataProvider being set on deps (from initializeTreeProviders).
  */
 export function initializeCommands(deps: ExtensionDependencies): vscode.Disposable {
-  const { context, database, gitRepository, tokenManager, logger, treeDataProvider, credentialStorage } = deps;
+  const { context, database, gitRepository, tokenManager, logger, treeDataProvider, credentialStorage, autoCommitManager } = deps;
 
   const commandRegistry = new CommandRegistry(
     database,
@@ -15,7 +15,8 @@ export function initializeCommands(deps: ExtensionDependencies): vscode.Disposab
     deps.workspacePath,
     () => treeDataProvider?.refresh(),
     tokenManager,
-    credentialStorage
+    credentialStorage,
+    autoCommitManager
   );
   commandRegistry.registerAll(context);
 

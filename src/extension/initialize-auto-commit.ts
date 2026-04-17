@@ -17,6 +17,7 @@ export async function initializeAutoCommit(deps: ExtensionDependencies): Promise
   const { storyRepository, workspacePath, coordinator, logger } = deps;
 
   const autoCommitManager = new AutoCommitManager(storyRepository, workspacePath);
+  deps.autoCommitManager = autoCommitManager;
 
   // Bootstrap handlers for all existing stories
   const allStories = storyRepository.findAll();

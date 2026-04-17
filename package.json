@@ -3,7 +3,7 @@
     "displayName": "Babel",
     "publisher": "wmorellato",
     "description": "An extension for writers to create and manage stories using VSCode.",
-    "version": "2.0.0-rc.5",
+    "version": "2.0.0-rc.6",
     "license": "SEE LICENSE IN LICENSE.md",
     "keywords": [
         "writing",
@@ -245,6 +245,12 @@
                 "command": "babel.createWorkspace",
                 "title": "Babel: Create Workspace",
                 "category": "Babel"
+            },
+            {
+                "command": "babel.forceCommit",
+                "title": "Force Commit Current Story",
+                "category": "Babel",
+                "description": "Immediately commit all unsaved changes for the current story"
             }
         ],
         "menus": {
@@ -348,6 +354,14 @@
                 }
             ]
         },
+        "keybindings": [
+            {
+                "command": "babel.forceCommit",
+                "key": "ctrl+alt+s",
+                "mac": "cmd+alt+s",
+                "when": "editorFocus && babel.workspaceInitialized"
+            }
+        ],
         "configuration": {
             "title": "Babel",
             "properties": {
