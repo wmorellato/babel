@@ -6,9 +6,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { ExtensionDependencies } from './types';
-import { Logger } from '../utils/logger';
 
-const logger = new Logger('RevealFeature');
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DEBOUNCE_MS = 100;
 
@@ -91,7 +89,7 @@ export async function initializeReveal(deps: ExtensionDependencies): Promise<vsc
           depsLogger.debug(`File not found in tree: ${fileName}`);
         }
       } catch (error) {
-        depsLogger.error(`Failed to reveal file: ${error}`);
+        depsLogger.error(`Failed to reveal file: ${error instanceof Error ? error.message : String(error)}`);
       }
     }, DEBOUNCE_MS);
   };
