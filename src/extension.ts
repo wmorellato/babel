@@ -24,6 +24,7 @@ import { ExtensionDependencies } from './extension/types';
 import { initializeColorAnnotations } from './extension/initialize-color-annotations';
 import { initializeAutoCommit } from './extension/initialize-auto-commit';
 import { initializeWordCount } from './extension/initialize-word-count';
+import { initializeReveal } from './extension/initialize-reveal';
 import { initializeBackups } from './extension/initialize-backups';
 import { initializeCommands } from './extension/initialize-commands';
 import { initializeHoverProviders } from './extension/initialize-hover-providers';
@@ -164,6 +165,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const colorDisposable = await initializeColorAnnotations(deps);
     const autoCommitDisposable = await initializeAutoCommit(deps);
     const wordCountDisposable = await initializeWordCount(deps);
+    const revealDisposable = await initializeReveal(deps);
 
     // 3. Initialize features that depend on tree provider (must come after tree init)
     const commandDisposable = initializeCommands(deps);
@@ -185,6 +187,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       colorDisposable,
       autoCommitDisposable,
       wordCountDisposable,
+      revealDisposable,
       commandDisposable,
       backupDisposable,
       hoverDisposable,
