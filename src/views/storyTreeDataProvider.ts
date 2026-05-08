@@ -118,6 +118,43 @@ export class BabelStoriesTreeDataProvider implements vscode.TreeDataProvider<vsc
   }
 
   /**
+   * Get parent of a tree item (required for reveal API)
+   */
+  getParent(element: vscode.TreeItem): vscode.TreeItem | null {
+    // If it's a FileTreeItem, its parent is the story
+    if (element instanceof FileTreeItem) {
+      const storyItem = this.getStoryItem(element.storyId);
+      return storyItem;
+    }
+    // Stories are root-level, no parent
+    return null;
+  }
+
+  /**
+   * Get or construct StoryTreeItem by ID
+   */
+  private getStoryItem(storyId: string): StoryTreeItem | null {
+    const story = this.storyRepository.findById(storyId);
+    if (!story) {
+      return null;
+    }
+
+    const versions = this.versionRepository.findByStoryId(storyId);
+    const versionCount = versions.length;
+
+    return new StoryTreeItem(story, versionCount, 'unknown');
+  }
+
+  /**
+   * Get FileTreeItem by story ID and file path
+   * Used by reveal feature to find the file to highlight
+   */
+  getFileTreeItem(storyId: string, filePath: string): vscode.TreeItem | null {
+    const files = this.getFilesForStory(storyId);
+    return files.find(f => f.resourceUri?.fsPath === filePath) || null;
+  }
+
+  /**
    * Get markdown files for a story
    */
   private getFilesForStory(storyId: string): FileTreeItem[] {
