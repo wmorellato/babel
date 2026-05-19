@@ -16,7 +16,6 @@ import { BackupRepository } from './db/backupRepository';
 import { ColorAnnotationRepository } from './db/colorAnnotationRepository';
 import { VSCodeSecretStorage } from './services/credentialStorage';
 import { TokenManager } from './services/tokenManager';
-import { BabelSettings } from './services/babelSettings';
 import { CredentialMigration } from './services/credentialMigration';
 import { BackupDataCollector } from './services/backupDataCollector';
 import { ListenerCoordinator } from './extension/listenerCoordinator';
@@ -107,9 +106,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const credentialStorage = new VSCodeSecretStorage(context.secrets);
     const tokenManager = new TokenManager(credentialStorage);
-
-    // Initialize settings and migrations
-    await BabelSettings.initializeDefaults();
 
     // Optimize VSCode's git extension: only detect repos for open editors
     // This prevents scanning all 100+ story git repos on startup

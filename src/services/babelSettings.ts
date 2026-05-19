@@ -19,11 +19,13 @@ export class BabelSettings {
   }
 
   /**
-   * Get a backup setting value
+   * Get a backup setting value, reading explicitly from global (user) scope
+   * to avoid workspace-scoped overrides masking the effective value.
    */
   static getBackupSetting<T>(key: string): T | undefined {
     const config = this.getBackupConfig();
-    return config.get<T>(key);
+    const inspection = config.inspect<T>(key);
+    return inspection?.globalValue ?? inspection?.defaultValue;
   }
 
   /**
@@ -37,31 +39,6 @@ export class BabelSettings {
     } catch (error) {
       logger.error(`Failed to update ${key}`, { error });
       throw error;
-    }
-  }
-
-  /**
-   * Initialize default Dropbox settings if not already configured
-   */
-  static async initializeDefaults(): Promise<void> {
-    const config = this.getBackupConfig();
-    const dropboxConfig = config.get<any>('dropbox');
-
-    // Only initialize if not already configured
-    if (!dropboxConfig?.clientId || !dropboxConfig?.redirectUri) {
-      try {
-        const defaults = {
-          enabled: false,
-          clientId: 'q0e787fjf1m58cj',
-          redirectUri: 'http://localhost:13678/oauth/callback',
-        };
-
-        await this.updateBackupSetting('dropbox', defaults);
-        logger.info('Dropbox default settings initialized');
-      } catch (error) {
-        logger.warn(`Failed to initialize Dropbox settings: ${error}`);
-        throw error;
-      }
     }
   }
 
