@@ -12,6 +12,7 @@ import { LocalBackupService } from './localBackupService';
 import { TokenManager } from './tokenManager';
 import { BabelSettings } from './babelSettings';
 import { DropboxBackupService } from './dropboxBackupService';
+import { createDropboxRefreshHandler } from './dropboxTokenRefresher';
 import { IBackupProvider } from './iBackupProvider';
 import { Logger } from '../utils/logger';
 import { BackupError } from '../utils/errorHandler';
@@ -28,8 +29,8 @@ export class BackupManager {
   private backupRepository: BackupRepository;
   private localBackupService: LocalBackupService;
   private cloudBackupService?: IBackupProvider;
-  private cloudBackupInitialized: boolean = false;
   private scheduledBackupId: NodeJS.Timeout | null = null;
+  private configChangeDisposable?: vscode.Disposable;
   private lastBackupTime: Map<string, Date> = new Map();
   private onScheduledBackup?: () => Promise<void>;
 
@@ -60,6 +61,14 @@ export class BackupManager {
     this.localBackupService = new LocalBackupService(backupDir);
 
     this.setupScheduling();
+
+    // Reset the cloud service when Dropbox settings change (re-auth, revoke, toggle)
+    // so it is re-initialized with fresh credentials on next use.
+    this.configChangeDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('babel.backup.dropbox')) {
+        this.cloudBackupService = undefined;
+      }
+    });
   }
 
   /**
@@ -78,8 +87,8 @@ export class BackupManager {
         return;
       }
 
-      // Get access token from TokenManager
-      const accessToken = await this.tokenManager.getValidToken('dropbox');
+      // Get access token, auto-refreshing if expired
+      const accessToken = await this.tokenManager.getValidToken('dropbox', createDropboxRefreshHandler());
 
       if (!accessToken) {
         logger.debug('Dropbox access token not available');
@@ -105,10 +114,8 @@ export class BackupManager {
     try {
       options.onProgress?.('Preparing backup...');
 
-      // Initialize cloud backup on first use if not already done
-      if (!this.cloudBackupInitialized) {
+      if (!this.cloudBackupService) {
         await this.initializeCloudBackup();
-        this.cloudBackupInitialized = true;
       }
 
       // Create backup
@@ -181,10 +188,8 @@ export class BackupManager {
    * Get cloud backups from Dropbox
    */
   async getCloudBackups(): Promise<BackupPoint[]> {
-    // Initialize cloud backup service if not already done
-    if (!this.cloudBackupInitialized) {
+    if (!this.cloudBackupService) {
       await this.initializeCloudBackup();
-      this.cloudBackupInitialized = true;
     }
 
     if (!this.cloudBackupService) {
@@ -286,6 +291,7 @@ export class BackupManager {
    */
   dispose(): void {
     this.stopScheduling();
+    this.configChangeDisposable?.dispose();
     if ('dispose' in this.onBackupCompleteEmitter) {
       this.onBackupCompleteEmitter.dispose();
     }

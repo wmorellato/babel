@@ -66,27 +66,32 @@ export class TokenManager {
   }
 
   /**
-   * Get a valid access token, auto-refreshing if needed
-   * Returns null if token expired and cannot be refreshed
+   * Get a valid access token, auto-refreshing if expired.
+   * Returns null if no token exists, or if it is expired and refresh fails.
    * @param key - Credential key
+   * @param refreshHandler - Optional handler to exchange a refresh token for a new access token
    * @returns Access token or null
    */
-  async getValidToken(key: string): Promise<string | null> {
+  async getValidToken(key: string, refreshHandler?: RefreshHandler): Promise<string | null> {
     const credential = await this.storage.retrieve(key);
 
     if (!credential) {
       return null;
     }
 
-    // Check if token is expired
     if (this.isExpired(credential)) {
-      // Can't refresh without refresh token
-      if (!credential.refreshToken) {
+      if (!credential.refreshToken || !refreshHandler) {
         logger.warn(`Token expired and cannot be refreshed: ${key}`);
         return null;
       }
-      // Token is expired but we don't auto-refresh here
-      return null;
+      try {
+        await this.refreshToken(key, refreshHandler);
+        const refreshed = await this.storage.retrieve(key);
+        return refreshed?.accessToken ?? null;
+      } catch (error) {
+        logger.warn(`Token refresh failed for: ${key}`);
+        return null;
+      }
     }
 
     return credential.accessToken;

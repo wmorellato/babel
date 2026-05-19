@@ -6,6 +6,7 @@
 import * as vscode from 'vscode';
 import { TokenManager } from './tokenManager';
 import { BabelSettings } from './babelSettings';
+import { createDropboxRefreshHandler } from './dropboxTokenRefresher';
 import { Logger } from '../utils/logger';
 
 const logger = new Logger('DropboxConnectivityChecker');
@@ -18,9 +19,8 @@ export class DropboxConnectivityChecker {
    */
   async checkConnectivity(): Promise<boolean> {
     try {
-      // Check if Dropbox is enabled and authorized in settings
-      if (!BabelSettings.isDropboxEnabled() || !BabelSettings.isAuthorized()) {
-        logger.debug('Dropbox not enabled or authorized');
+      if (!BabelSettings.isDropboxEnabled()) {
+        logger.debug('Dropbox not enabled');
         return false;
       }
 
@@ -30,14 +30,12 @@ export class DropboxConnectivityChecker {
         return false;
       }
 
-      // Try to get a valid token
-      const token = await this.tokenManager.getValidToken('dropbox');
+      // Try to get a valid token, auto-refreshing if expired
+      const token = await this.tokenManager.getValidToken('dropbox', createDropboxRefreshHandler());
       if (!token) {
         logger.warn('No valid Dropbox token available, updating authorized status to false');
-        // Update settings to show not authorized
         try {
           await BabelSettings.setAuthorized(false);
-          logger.info('Updated dropbox.authorized setting to false');
         } catch (updateError) {
           logger.error('Failed to update dropbox.authorized setting', { error: updateError });
         }
@@ -49,6 +47,10 @@ export class DropboxConnectivityChecker {
         const { Dropbox } = require('dropbox');
         const dropbox = new Dropbox({ accessToken: token });
         await dropbox.usersGetCurrentAccount();
+
+        // Heal authorized flag in case it was incorrectly set to false during a prior
+        // session when the access token had expired but the refresh token was still valid.
+        await BabelSettings.setAuthorized(true);
 
         logger.info('✓ Dropbox connectivity verified');
         return true;
