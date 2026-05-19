@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.0.0] - 2026-04-04
+
+### Added
+
+- Text highlighting with custom colors.
+
+### Changed
+
+- For backups, changed from Google to Dropbox as cloud provider.
+- Whole architecture changed. Using SQLite for database, added debouncing for listeners, better separation of views, services and commands.
+- *Real* git management for stories. One branch per version over same set of files.
+- Stories `TreeView` now supports custom icons.
+- Decluttered stories `TreeView`.
+
+### Removed
+
+- Markdown comments. Might bring it back in the future.
+
 ## [1.12.0] - 2025-11-24
 
 ### Added
