@@ -109,6 +109,18 @@ jest.mock('vscode', () => ({
       }
     };
   },
+  MarkdownString: class MarkdownString {
+    value: string;
+
+    constructor(value?: string) {
+      this.value = value ?? '';
+    }
+
+    appendMarkdown(value: string): MarkdownString {
+      this.value += value;
+      return this;
+    }
+  },
   StatusBarAlignment: {
     Left: 1,
     Right: 2,
