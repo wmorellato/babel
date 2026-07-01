@@ -72,6 +72,15 @@ export async function initializeReveal(deps: ExtensionDependencies): Promise<vsc
         return;
       }
 
+      // Skip when the tree view isn't visible (e.g. Zen Mode or fullscreen hide
+      // the sidebar). VSCode exposes no API to detect Zen Mode directly, but
+      // reveal() force-opens a hidden view, so guarding on visibility avoids
+      // disrupting a distraction-free editing session.
+      if (!treeView.visible) {
+        depsLogger.debug('Tree view not visible (Zen Mode/fullscreen?), skipping reveal');
+        return;
+      }
+
       try {
         // Find the FileTreeItem in the tree
         const fileItem = treeDataProvider.getFileTreeItem(storyId, fileName);
