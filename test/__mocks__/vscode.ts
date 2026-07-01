@@ -112,6 +112,7 @@ export interface SaveDialogOptions {
 export interface StatusBarItem extends Disposable {
   text: string;
   command?: string;
+  tooltip?: string | MarkdownString;
   show(): void;
   hide(): void;
 }
@@ -157,6 +158,7 @@ export const window = {
     return {
       text: '',
       command: undefined,
+      tooltip: undefined,
       show: jest.fn(),
       hide: jest.fn(),
       dispose: jest.fn(),
@@ -190,6 +192,19 @@ export class ThemeColor {
 
 export class ThemeIcon {
   constructor(public readonly id: string, public readonly color?: ThemeColor) {}
+}
+
+export class MarkdownString {
+  value: string;
+
+  constructor(value?: string) {
+    this.value = value ?? '';
+  }
+
+  appendMarkdown(value: string): MarkdownString {
+    this.value += value;
+    return this;
+  }
 }
 
 export class EventEmitter<T> {
