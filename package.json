@@ -71,6 +71,11 @@
                 "icon": "$(add)"
             },
             {
+                "command": "babel.fetchRandomWord",
+                "title": "Babel: Fetch Random Word",
+                "icon": "$(book)"
+            },
+            {
                 "command": "babel.newVersion",
                 "title": "Babel: New Version"
             },
