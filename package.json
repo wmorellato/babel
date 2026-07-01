@@ -365,6 +365,17 @@
         "configuration": {
             "title": "Babel",
             "properties": {
+                "babel.wordnik.apiKey": {
+                    "type": "string",
+                    "default": "",
+                    "markdownDescription": "API key for [Wordnik](https://developer.wordnik.com/) used by the random word status bar item."
+                },
+                "babel.wordnik.definitionCount": {
+                    "type": "number",
+                    "default": 3,
+                    "minimum": 1,
+                    "description": "Number of definitions shown in the random word tooltip."
+                },
                 "babel.backup.enabled": {
                     "type": "boolean",
                     "default": true,
