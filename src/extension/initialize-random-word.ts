@@ -35,7 +35,7 @@ export function initializeRandomWord(deps: ExtensionDependencies): vscode.Dispos
           ? 'Set babel.wordnik.apiKey to use the random word feature.'
           : `Failed to fetch random word: ${error instanceof Error ? error.message : String(error)}`;
       void vscode.window.showErrorMessage(message);
-      logger.warn(message);
+      logger.warn(message, error);
     }
   };
 
