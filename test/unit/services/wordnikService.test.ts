@@ -7,6 +7,7 @@ jest.mock('vscode');
 describe('WordnikService', () => {
   let service: WordnikService;
   let mockConfig: any;
+  const originalFetch = global.fetch;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -19,6 +20,7 @@ describe('WordnikService', () => {
   });
 
   afterEach(() => {
+    global.fetch = originalFetch;
     jest.restoreAllMocks();
   });
 

@@ -28,6 +28,7 @@ export class RandomWordStatusBar {
   }
 
   showInitial(): void {
+    this.fetching = false;
     this.statusBarItem.text = INITIAL_TEXT;
     this.statusBarItem.tooltip = INITIAL_TOOLTIP;
   }
